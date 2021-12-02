@@ -1,4 +1,4 @@
-# SteampipeCloud Plugin for Steampipe
+# steampipe-plugin-steampipecloud
 
 Use SQL to query infrastructure including servers, networks, identity and more from SteampipeCloud.
 
