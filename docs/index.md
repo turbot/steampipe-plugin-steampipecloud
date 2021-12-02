@@ -5,7 +5,7 @@ icon_url: "/images/plugins/turbot/steampipecloud.svg"
 brand_color: "#008bcf"
 display_name: "SteampipeCloud"
 name: "steampipecloud"
-description: "Steampipe plugin for querying steampipecloud workspaces, connections, and other resources."
+description: "Steampipe plugin for querying steampipecloud workspaces, connections and other resources."
 ---
 
 # SteampipeCloud
@@ -39,7 +39,6 @@ connection "steampipecloud" {
 
 The SteampipeCloud plugin allows you set static credentials with the `token` argument. You can use them to authenticate to the API by including it in a bearer-type Authorization header with your request. 
 
-To use the plugin, you'll first need to [create token](`token creation doc link`).
+To use the plugin, you'll first need to `create token` in your SteampipeCloud console.
 
-If the `token` argument is not specified for a connection, the project will be determined in the following order:
-  - The STEAMPIPE_CLOUD_TOKEN environment variable.
+If the `token` argument is not specified for a connection, the plugin will look for the `STEAMPIPE_CLOUD_TOKEN` environment variable.

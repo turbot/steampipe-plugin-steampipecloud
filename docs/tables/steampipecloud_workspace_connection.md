@@ -1,7 +1,6 @@
 # Table: steampipecloud_workspace_connection
 
-
-
+This table will show the associations between workspaces and connections.
 
 ## Examples
 

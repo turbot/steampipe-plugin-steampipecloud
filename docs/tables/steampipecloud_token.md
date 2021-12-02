@@ -1,6 +1,6 @@
 # Table: steampipecloud_token
 
-
+A steampipe cloud token which can be used to sign programmatic request and perform action on steampipe cloud.
 
 
 ## Examples

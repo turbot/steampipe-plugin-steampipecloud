@@ -1,7 +1,6 @@
 # Table: steampipecloud_connection
 
-
-
+A Steampipe Connection represents a set of tables for a single data source. Each connection is represented as a distinct Postgres schema.
 
 ## Examples
 

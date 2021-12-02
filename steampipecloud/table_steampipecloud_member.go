@@ -26,61 +26,61 @@ func tableSteampipecloudMember(_ context.Context) *plugin.Table {
 		Columns: []*plugin.Column{
 			{
 				Name:        "id",
-				Description: "",
+				Description: "The unique identifier for the member.",
 				Type:        proto.ColumnType_STRING,
 				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "org_id",
-				Description: "",
+				Description: "The unique identifier for the organization.",
 				Type:        proto.ColumnType_STRING,
 				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "status",
-				Description: "",
+				Description: "The member current status.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "user_id",
-				Description: "",
+				Description: "The unique identifier for the user.",
 				Type:        proto.ColumnType_STRING,
 				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "user_handle",
-				Description: "",
+				Description: "The handle name for the user.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "email",
-				Description: "",
+				Description: "The email id for the user.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "role",
-				Description: "",
+				Description: "The role of the member.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "created_at",
-				Description: "",
+				Description: "The member creation time.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
 				Name:        "updated_at",
-				Description: "",
+				Description: "The last time member was updated.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
 				Name:        "version_id",
-				Description: "",
+				Description: "The current version id for the member.",
 				Type:        proto.ColumnType_INT,
 				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "user",
-				Description: "",
+				Description: "The user details.",
 				Type:        proto.ColumnType_JSON,
 			},
 		},
@@ -90,7 +90,7 @@ func tableSteampipecloudMember(_ context.Context) *plugin.Table {
 //// LIST FUNCTION
 
 func listMembers(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-	org := h.Item.(openapi.TypesUserOrg)
+	org := h.Item.(openapi.TypesOrg)
 
 	// Create Session
 	svc, err := connect(ctx, d)
@@ -108,7 +108,7 @@ func listMembers(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData
 		b, err := retry.NewFibonacci(100 * time.Millisecond)
 		if resp.NextToken != nil {
 			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.OrgMembersApi.ListAcceptedOrgMembers(context.Background(), org.Org.Handle).NextToken(*resp.NextToken).Execute()
+				resp, httpResp, err = svc.OrgMembersApi.ListAcceptedOrgMembers(context.Background(), org.Handle).NextToken(*resp.NextToken).Execute()
 				// 429 too many request
 				if httpResp.StatusCode == 429 {
 					return retry.RetryableError(err)
@@ -117,7 +117,7 @@ func listMembers(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData
 			})
 		} else {
 			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.OrgMembersApi.ListAcceptedOrgMembers(context.Background(), org.Org.Handle).Execute()
+				resp, httpResp, err = svc.OrgMembersApi.ListAcceptedOrgMembers(context.Background(), org.Handle).Execute()
 				// 429 too many request
 				if httpResp.StatusCode == 429 {
 					return retry.RetryableError(err)
@@ -148,7 +148,7 @@ func listMembers(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData
 		b, err := retry.NewFibonacci(100 * time.Millisecond)
 		if resp.NextToken != nil {
 			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.OrgMembersApi.ListInvitedOrgMembers(context.Background(), org.Org.Handle).NextToken(*resp.NextToken).Execute()
+				resp, httpResp, err = svc.OrgMembersApi.ListInvitedOrgMembers(context.Background(), org.Handle).NextToken(*resp.NextToken).Execute()
 				// 429 too many request
 				if httpResp.StatusCode == 429 {
 					return retry.RetryableError(err)
@@ -158,7 +158,7 @@ func listMembers(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData
 
 		} else {
 			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.OrgMembersApi.ListInvitedOrgMembers(context.Background(), org.Org.Handle).Execute()
+				resp, httpResp, err = svc.OrgMembersApi.ListInvitedOrgMembers(context.Background(), org.Handle).Execute()
 				// 429 too many request
 				if httpResp.StatusCode == 429 {
 					return retry.RetryableError(err)

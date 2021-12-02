@@ -1,7 +1,6 @@
 # Table: steampipecloud_org
 
-
-
+Steampipe Cloud users can create their own connections and workspaces, but they are not shared with other users. Steampipe Organizations, on the other hand, include multiple users and are intended for organizations to collaborate and share workspaces and connections.
 
 ## Examples
 
