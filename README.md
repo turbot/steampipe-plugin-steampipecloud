@@ -1,5 +1,3 @@
-# ![image](https://hub.steampipe.io/images/plugins/turbot/do-social-graphic.png)
-
 # SteampipeCloud Plugin for Steampipe
 
 Use SQL to query infrastructure including servers, networks, identity and more from SteampipeCloud.
