@@ -2,7 +2,8 @@
 
 Steampipe cloud audit log records the series of events performed on the identity.
 
-
+Note: **you must specify user handle or org handle** in the where or join clause using the `identity_handle` column.
+ 
 ## Examples
 
 ### List user audit logs
