@@ -25,58 +25,45 @@ func tableSteampipecloudOrganization(_ context.Context) *plugin.Table {
 		Columns: []*plugin.Column{
 			{
 				Name:        "id",
-				Description: "",
+				Description: "The unique identifier for a organization.",
 				Type:        proto.ColumnType_STRING,
 				Transform:   transform.FromCamel(),
 			},
 			{
-				Name:        "org_id",
-				Description: "",
-				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromCamel(),
-			},
-			{
-				Name:        "org_handle",
-				Description: "",
-				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromField("Org.Handle"),
-			},
-			{
-				Name:        "status",
-				Description: "",
+				Name:        "handle",
+				Description: "The handle name for the organization.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
-				Name:        "role",
-				Description: "",
+				Name:        "display_name",
+				Description: "The display name for the organization.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
-				Name:        "user_id",
-				Description: "",
+				Name:        "avatar_url",
+				Description: "The avatar url of the organization.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromCamel(),
+			},
+			{
+				Name:        "url",
+				Description: "The url of the organization.",
+				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "created_at",
-				Description: "",
+				Description: "The organization creation time.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "version_id",
-				Description: "",
+				Description: "The organization current version id.",
 				Type:        proto.ColumnType_INT,
 				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "updated_at",
-				Description: "",
+				Description: "The organization last update time.",
 				Type:        proto.ColumnType_STRING,
-			},
-			{
-				Name:        "org",
-				Description: "",
-				Type:        proto.ColumnType_JSON,
 			},
 		},
 	}
@@ -130,7 +117,7 @@ func listOrganizations(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 		}
 		if resp.HasItems() {
 			for _, org := range *resp.Items {
-				d.StreamListItem(ctx, org)
+				d.StreamListItem(ctx, org.Org)
 			}
 		}
 
