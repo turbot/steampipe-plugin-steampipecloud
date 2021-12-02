@@ -43,7 +43,7 @@ func tableSteampipecloudAuditLog(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:        "identity_handle",
-				Description: "The handle name for an identity.",
+				Description: "The handle name for an identity where the action has been performed.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
@@ -68,7 +68,7 @@ func tableSteampipecloudAuditLog(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:        "actor_id",
-				Description: "The unique identifier of an actor who has performed the action.",
+				Description: "The unique identifier of an actor.",
 				Type:        proto.ColumnType_STRING,
 				Transform:   transform.FromCamel(),
 			},
