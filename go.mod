@@ -3,6 +3,7 @@ module steampipe-plugin-steampipecloud
 go 1.17
 
 require (
+	github.com/sethvargo/go-retry v0.1.0
 	github.com/turbot/steampipe-cloud-sdk-go v0.0.0
 	github.com/turbot/steampipe-plugin-sdk v1.8.2
 )
@@ -35,7 +36,6 @@ require (
 	github.com/oklog/run v1.0.0 // indirect
 	github.com/olekukonko/tablewriter v0.0.4 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/sethvargo/go-retry v0.1.0 // indirect
 	github.com/stevenle/topsort v0.0.0-20130922064739-8130c1d7596b // indirect
 	github.com/tkrajina/go-reflector v0.5.4 // indirect
 	github.com/turbot/go-kit v0.3.0 // indirect
