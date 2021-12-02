@@ -1,0 +1,207 @@
+package steampipecloud
+
+import (
+	"context"
+	"net/http"
+	"time"
+
+	"github.com/sethvargo/go-retry"
+	openapi "github.com/turbot/steampipe-cloud-sdk-go"
+
+	"github.com/turbot/steampipe-plugin-sdk/grpc/proto"
+	"github.com/turbot/steampipe-plugin-sdk/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/plugin/transform"
+)
+
+//// TABLE DEFINITION
+
+func tableSteampipecloudWorkspaceConnection(_ context.Context) *plugin.Table {
+	return &plugin.Table{
+		Name:        "steampipecloud_workspace_connection",
+		Description: "Steampipecloud Workspace Connection",
+		List: &plugin.ListConfig{
+			ParentHydrate: listWorkspaces,
+			Hydrate:       listWorkspaceConnections,
+		},
+		Columns: []*plugin.Column{
+			{
+				Name:        "id",
+				Description: "",
+				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromCamel(),
+			},
+			{
+				Name:        "connection_id",
+				Description: "",
+				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromCamel(),
+			},
+			{
+				Name:        "workspace_id",
+				Description: "",
+				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromCamel(),
+			},
+			{
+				Name:        "identity_id",
+				Description: "",
+				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromCamel(),
+			},
+			{
+				Name:        "created_at",
+				Description: "",
+				Type:        proto.ColumnType_STRING,
+			},
+			{
+				Name:        "version_id",
+				Description: "",
+				Type:        proto.ColumnType_INT,
+				Transform:   transform.FromCamel(),
+			},
+			{
+				Name:        "updated_at",
+				Description: "",
+				Type:        proto.ColumnType_STRING,
+			},
+			{
+				Name:        "connection",
+				Description: "",
+				Type:        proto.ColumnType_JSON,
+			},
+			{
+				Name:        "workspace",
+				Description: "",
+				Type:        proto.ColumnType_JSON,
+			},
+		},
+	}
+}
+
+//// LIST FUNCTION
+
+func listWorkspaceConnections(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	workspace := h.Item.(openapi.TypesWorkspace)
+
+	getUserIdentityCached := plugin.HydrateFunc(getUserIdentity).WithCache()
+	commonData, err := getUserIdentityCached(ctx, d, h)
+	user := commonData.(openapi.TypesUser)
+
+	if workspace.Identity.Handle == user.Handle {
+		err = listUserWorkspaceConnectionAssociations(ctx, d, h, user.Handle, workspace.Handle)
+	} else {
+		err = listOrgWorkspaceConnectionAssociations(ctx, d, h, workspace.Identity.Handle, workspace.Handle)
+	}
+
+	if err != nil {
+		plugin.Logger(ctx).Error("listWorkspaceConnections", "list", err)
+		return nil, err
+	}
+	return nil, nil
+}
+
+func listUserWorkspaceConnectionAssociations(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, userHandle string, workspaceHandle string) error {
+	// Create Session
+	svc, err := connect(ctx, d)
+	if err != nil {
+		plugin.Logger(ctx).Error("listUserWorkspaceConnectionAssociations", "connection_error", err)
+		return err
+	}
+
+	// execute list call
+	pagesLeft := true
+	var resp openapi.TypesListWorkspaceConnResponse
+	var httpResp *http.Response
+
+	for pagesLeft {
+		b, err := retry.NewFibonacci(100 * time.Millisecond)
+		if resp.NextToken != nil {
+			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
+				resp, httpResp, err = svc.UserWorkspaceConnectionAssociationsApi.ListUserWorkspaceConnectionAssociations(context.Background(), userHandle, workspaceHandle).NextToken(*resp.NextToken).Execute()
+				// 429 too many request
+				if httpResp.StatusCode == 429 {
+					return retry.RetryableError(err)
+				}
+				return nil
+			})
+		} else {
+			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
+				resp, httpResp, err = svc.UserWorkspaceConnectionAssociationsApi.ListUserWorkspaceConnectionAssociations(context.Background(), userHandle, workspaceHandle).Execute()
+				// 429 too many request
+				if httpResp.StatusCode == 429 {
+					return retry.RetryableError(err)
+				}
+				return nil
+			})
+		}
+
+		if err != nil {
+			plugin.Logger(ctx).Error("listUserWorkspaceConnectionAssociations", "list", err)
+			return err
+		}
+
+		if resp.HasItems() {
+			for _, workspaceConn := range *resp.Items {
+				d.StreamListItem(ctx, workspaceConn)
+			}
+		}
+		if resp.NextToken == nil {
+			pagesLeft = false
+		}
+	}
+
+	return nil
+}
+
+func listOrgWorkspaceConnectionAssociations(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, orgHandle string, workspaceHandle string) error {
+	// Create Session
+	svc, err := connect(ctx, d)
+	if err != nil {
+		plugin.Logger(ctx).Error("listOrgWorkspaceConnectionAssociations", "connection_error", err)
+		return err
+	}
+
+	// execute list call
+	pagesLeft := true
+	var resp openapi.TypesListWorkspaceConnResponse
+	var httpResp *http.Response
+
+	for pagesLeft {
+		b, err := retry.NewFibonacci(100 * time.Millisecond)
+		if resp.NextToken != nil {
+			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
+				resp, httpResp, err = svc.OrgWorkspaceConnectionAssociationsApi.ListOrgWorkspaceConnectionAssociations(context.Background(), orgHandle, workspaceHandle).NextToken(*resp.NextToken).Execute()
+				// 429 too many request
+				if httpResp.StatusCode == 429 {
+					return retry.RetryableError(err)
+				}
+				return nil
+			})
+		} else {
+			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
+				resp, httpResp, err = svc.OrgWorkspaceConnectionAssociationsApi.ListOrgWorkspaceConnectionAssociations(context.Background(), orgHandle, workspaceHandle).Execute()
+				// 429 too many request
+				if httpResp.StatusCode == 429 {
+					return retry.RetryableError(err)
+				}
+				return nil
+			})
+		}
+
+		if err != nil {
+			plugin.Logger(ctx).Error("listOrgWorkspaceConnectionAssociations", "list", err)
+			return err
+		}
+
+		if resp.HasItems() {
+			for _, workspaceConn := range *resp.Items {
+				d.StreamListItem(ctx, workspaceConn)
+			}
+		}
+		if resp.NextToken == nil {
+			pagesLeft = false
+		}
+	}
+
+	return nil
+}
