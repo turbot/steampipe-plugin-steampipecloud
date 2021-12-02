@@ -1,6 +1,6 @@
 # Table: steampipecloud_audit_log
 
-
+Steampipe cloud audit log records the series of events performed on the identity.
 
 
 ## Examples
