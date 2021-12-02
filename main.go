@@ -1,0 +1,13 @@
+package main
+
+import (
+	// "github.com/lalitturbot/steampipe-plugin-steampipecloud/steampipecloud"
+	"steampipe-plugin-steampipecloud/steampipecloud"
+
+	"github.com/turbot/steampipe-plugin-sdk/plugin"
+)
+
+func main() {
+	plugin.Serve(&plugin.ServeOpts{
+		PluginFunc: steampipecloud.Plugin})
+}
