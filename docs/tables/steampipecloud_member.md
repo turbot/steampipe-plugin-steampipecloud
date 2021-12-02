@@ -1,7 +1,6 @@
 # Table: steampipecloud_member
 
-
-
+ The member of an organization who can collaborate and share workspaces and connections.
 
 ## Examples
 
