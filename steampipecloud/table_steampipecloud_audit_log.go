@@ -2,10 +2,7 @@ package steampipecloud
 
 import (
 	"context"
-	"net/http"
-	"time"
 
-	"github.com/sethvargo/go-retry"
 	openapi "github.com/turbot/steampipe-cloud-sdk-go"
 
 	"github.com/turbot/steampipe-plugin-sdk/grpc/proto"
@@ -135,42 +132,39 @@ func listOrgAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
 	// execute list call
 	pagesLeft := true
 	var resp openapi.TypesListAuditLogsResponse
-	var httpResp *http.Response
+	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
-		b, err := retry.NewFibonacci(100 * time.Millisecond)
 		if resp.NextToken != nil {
-			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.OrgsApi.ListOrgAuditLogs(context.Background(), handle).NextToken(*resp.NextToken).Execute()
-				// 429 too many request
-				if httpResp.StatusCode == 429 {
-					return retry.RetryableError(err)
-				}
-				return nil
-			})
+			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+				resp, _, err = svc.OrgsApi.ListOrgAuditLogs(context.Background(), handle).NextToken(*resp.NextToken).Execute()
+				return resp, err
+			}
 		} else {
-			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.OrgsApi.ListOrgAuditLogs(context.Background(), handle).Execute()
-				// 429 too many request
-				if httpResp.StatusCode == 429 {
-					return retry.RetryableError(err)
-				}
-				return nil
-			})
+			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+				resp, _, err = svc.OrgsApi.ListOrgAuditLogs(context.Background(), handle).Execute()
+				return resp, err
+			}
 		}
+
+		response, err := plugin.RetryHydrate(ctx, d, h, listDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
 		if err != nil {
 			plugin.Logger(ctx).Error("listOrgAuditLogs", "list", err)
 			return err
 		}
 
-		if resp.HasItems() {
-			for _, log := range *resp.Items {
+		result := response.(openapi.TypesListAuditLogsResponse)
+
+		if result.HasItems() {
+			for _, log := range *result.Items {
 				d.StreamListItem(ctx, log)
 			}
 		}
-		if resp.NextToken == nil {
+		if result.NextToken == nil {
 			pagesLeft = false
+		} else {
+			resp.NextToken = result.NextToken
 		}
 	}
 
@@ -188,44 +182,39 @@ func listUserAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 	// execute list call
 	pagesLeft := true
 	var resp openapi.TypesListAuditLogsResponse
-	var httpResp *http.Response
+	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
-		b, err := retry.NewFibonacci(100 * time.Millisecond)
 		if resp.NextToken != nil {
-			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.UsersApi.ListUserAuditLogs(context.Background(), handle).NextToken(*resp.NextToken).Execute()
-				// 429 too many request
-				if httpResp.StatusCode == 429 {
-					return retry.RetryableError(err)
-				}
-				return nil
-			})
-
+			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+				resp, _, err = svc.UsersApi.ListUserAuditLogs(context.Background(), handle).NextToken(*resp.NextToken).Execute()
+				return resp, err
+			}
 		} else {
-			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.UsersApi.ListUserAuditLogs(context.Background(), handle).Execute()
-				// 429 too many request
-				if httpResp.StatusCode == 429 {
-					return retry.RetryableError(err)
-				}
-				return nil
-			})
-
+			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+				resp, _, err = svc.UsersApi.ListUserAuditLogs(context.Background(), handle).Execute()
+				return resp, err
+			}
 		}
+
+		response, err := plugin.RetryHydrate(ctx, d, h, listDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
 		if err != nil {
 			plugin.Logger(ctx).Error("listUserAuditLogs", "list", err)
 			return err
 		}
 
-		if resp.HasItems() {
-			for _, log := range *resp.Items {
+		result := response.(openapi.TypesListAuditLogsResponse)
+
+		if result.HasItems() {
+			for _, log := range *result.Items {
 				d.StreamListItem(ctx, log)
 			}
 		}
 		if resp.NextToken == nil {
 			pagesLeft = false
+		} else {
+			resp.NextToken = result.NextToken
 		}
 	}
 

@@ -2,10 +2,7 @@ package steampipecloud
 
 import (
 	"context"
-	"net/http"
-	"time"
 
-	"github.com/sethvargo/go-retry"
 	openapi "github.com/turbot/steampipe-cloud-sdk-go"
 
 	"github.com/turbot/steampipe-plugin-sdk/grpc/proto"
@@ -111,42 +108,39 @@ func listUserWorkspaceConnectionAssociations(ctx context.Context, d *plugin.Quer
 	// execute list call
 	pagesLeft := true
 	var resp openapi.TypesListWorkspaceConnResponse
-	var httpResp *http.Response
+	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
-		b, err := retry.NewFibonacci(100 * time.Millisecond)
 		if resp.NextToken != nil {
-			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.UserWorkspaceConnectionAssociationsApi.ListUserWorkspaceConnectionAssociations(context.Background(), userHandle, workspaceHandle).NextToken(*resp.NextToken).Execute()
-				// 429 too many request
-				if httpResp.StatusCode == 429 {
-					return retry.RetryableError(err)
-				}
-				return nil
-			})
+			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+				resp, _, err = svc.UserWorkspaceConnectionAssociationsApi.ListUserWorkspaceConnectionAssociations(context.Background(), userHandle, workspaceHandle).NextToken(*resp.NextToken).Execute()
+				return resp, err
+			}
 		} else {
-			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.UserWorkspaceConnectionAssociationsApi.ListUserWorkspaceConnectionAssociations(context.Background(), userHandle, workspaceHandle).Execute()
-				// 429 too many request
-				if httpResp.StatusCode == 429 {
-					return retry.RetryableError(err)
-				}
-				return nil
-			})
+			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+				resp, _, err = svc.UserWorkspaceConnectionAssociationsApi.ListUserWorkspaceConnectionAssociations(context.Background(), userHandle, workspaceHandle).Execute()
+				return resp, err
+			}
 		}
+
+		response, err := plugin.RetryHydrate(ctx, d, h, listDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
 		if err != nil {
 			plugin.Logger(ctx).Error("listUserWorkspaceConnectionAssociations", "list", err)
 			return err
 		}
 
-		if resp.HasItems() {
-			for _, workspaceConn := range *resp.Items {
+		result := response.(openapi.TypesListWorkspaceConnResponse)
+
+		if result.HasItems() {
+			for _, workspaceConn := range *result.Items {
 				d.StreamListItem(ctx, workspaceConn)
 			}
 		}
-		if resp.NextToken == nil {
+		if result.NextToken == nil {
 			pagesLeft = false
+		} else {
+			resp.NextToken = result.NextToken
 		}
 	}
 
@@ -164,42 +158,39 @@ func listOrgWorkspaceConnectionAssociations(ctx context.Context, d *plugin.Query
 	// execute list call
 	pagesLeft := true
 	var resp openapi.TypesListWorkspaceConnResponse
-	var httpResp *http.Response
+	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
-		b, err := retry.NewFibonacci(100 * time.Millisecond)
 		if resp.NextToken != nil {
-			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.OrgWorkspaceConnectionAssociationsApi.ListOrgWorkspaceConnectionAssociations(context.Background(), orgHandle, workspaceHandle).NextToken(*resp.NextToken).Execute()
-				// 429 too many request
-				if httpResp.StatusCode == 429 {
-					return retry.RetryableError(err)
-				}
-				return nil
-			})
+			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+				resp, _, err = svc.OrgWorkspaceConnectionAssociationsApi.ListOrgWorkspaceConnectionAssociations(context.Background(), orgHandle, workspaceHandle).NextToken(*resp.NextToken).Execute()
+				return resp, err
+			}
 		} else {
-			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.OrgWorkspaceConnectionAssociationsApi.ListOrgWorkspaceConnectionAssociations(context.Background(), orgHandle, workspaceHandle).Execute()
-				// 429 too many request
-				if httpResp.StatusCode == 429 {
-					return retry.RetryableError(err)
-				}
-				return nil
-			})
+			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+				resp, _, err = svc.OrgWorkspaceConnectionAssociationsApi.ListOrgWorkspaceConnectionAssociations(context.Background(), orgHandle, workspaceHandle).Execute()
+				return resp, err
+			}
 		}
+
+		response, err := plugin.RetryHydrate(ctx, d, h, listDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
 		if err != nil {
 			plugin.Logger(ctx).Error("listOrgWorkspaceConnectionAssociations", "list", err)
 			return err
 		}
 
-		if resp.HasItems() {
-			for _, workspaceConn := range *resp.Items {
+		result := response.(openapi.TypesListWorkspaceConnResponse)
+
+		if result.HasItems() {
+			for _, workspaceConn := range *result.Items {
 				d.StreamListItem(ctx, workspaceConn)
 			}
 		}
-		if resp.NextToken == nil {
+		if result.NextToken == nil {
 			pagesLeft = false
+		} else {
+			resp.NextToken = result.NextToken
 		}
 	}
 

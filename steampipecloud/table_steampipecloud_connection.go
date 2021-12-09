@@ -2,10 +2,7 @@ package steampipecloud
 
 import (
 	"context"
-	"net/http"
-	"time"
 
-	"github.com/sethvargo/go-retry"
 	openapi "github.com/turbot/steampipe-cloud-sdk-go"
 
 	"github.com/turbot/steampipe-plugin-sdk/grpc/proto"
@@ -132,40 +129,37 @@ func listOrgConnections(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 	// execute list call
 	pagesLeft := true
 	var resp openapi.TypesListConnectionsResponse
-	var httpResp *http.Response
+	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
-		b, err := retry.NewFibonacci(100 * time.Millisecond)
 		if resp.NextToken != nil {
-			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.OrgConnectionsApi.ListOrgConnections(context.Background(), handle).NextToken(*resp.NextToken).Execute()
-				// 429 too many request
-				if httpResp.StatusCode == 429 {
-					return retry.RetryableError(err)
-				}
-				return nil
-			})
+			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+				resp, _, err = svc.OrgConnectionsApi.ListOrgConnections(context.Background(), handle).NextToken(*resp.NextToken).Execute()
+				return resp, err
+			}
 		} else {
-			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.OrgConnectionsApi.ListOrgConnections(context.Background(), handle).Execute()
-				// 429 too many request
-				if httpResp.StatusCode == 429 {
-					return retry.RetryableError(err)
-				}
-				return nil
-			})
+			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+				resp, _, err = svc.OrgConnectionsApi.ListOrgConnections(context.Background(), handle).Execute()
+				return resp, err
+			}
 		}
+
+		response, err := plugin.RetryHydrate(ctx, d, h, listDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
 		if err != nil {
 			plugin.Logger(ctx).Error("listOrgConnections", "list", err)
 			return err
 		}
 
-		for _, connection := range *resp.Items {
+		result := response.(openapi.TypesListConnectionsResponse)
+
+		for _, connection := range *result.Items {
 			d.StreamListItem(ctx, connection)
 		}
-		if resp.NextToken == nil {
+		if result.NextToken == nil {
 			pagesLeft = false
+		} else {
+			resp.NextToken = result.NextToken
 		}
 	}
 
@@ -183,42 +177,40 @@ func listUserConnections(ctx context.Context, d *plugin.QueryData, h *plugin.Hyd
 	// execute list call
 	pagesLeft := true
 	var resp openapi.TypesListConnectionsResponse
-	var httpResp *http.Response
+	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
-		b, err := retry.NewFibonacci(100 * time.Millisecond)
 		if resp.NextToken != nil {
-			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.UserConnectionsApi.ListUserConnections(context.Background(), handle).NextToken(*resp.NextToken).Execute()
-				// 429 too many request
-				if httpResp.StatusCode == 429 {
-					return retry.RetryableError(err)
-				}
-				return nil
-			})
+			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+				resp, _, err = svc.UserConnectionsApi.ListUserConnections(context.Background(), handle).NextToken(*resp.NextToken).Execute()
+				return resp, err
+			}
 		} else {
-			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.UserConnectionsApi.ListUserConnections(context.Background(), handle).Execute()
-				// 429 too many request
-				if httpResp.StatusCode == 429 {
-					return retry.RetryableError(err)
-				}
-				return nil
-			})
+			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+				resp, _, err = svc.UserConnectionsApi.ListUserConnections(context.Background(), handle).Execute()
+				return resp, err
+			}
 		}
+
+		response, err := plugin.RetryHydrate(ctx, d, h, listDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
 		if err != nil {
 			plugin.Logger(ctx).Error("listUserConnections", "list", err)
 			return err
 		}
 
-		for _, connection := range *resp.Items {
+		result := response.(openapi.TypesListConnectionsResponse)
+
+		for _, connection := range *result.Items {
 			d.StreamListItem(ctx, connection)
 		}
-		if resp.NextToken == nil {
+		if result.NextToken == nil {
 			pagesLeft = false
+		} else {
+			resp.NextToken = result.NextToken
 		}
 	}
+
 	return nil
 }
 
@@ -234,42 +226,39 @@ func listActorConnections(ctx context.Context, d *plugin.QueryData, h *plugin.Hy
 	pagesLeft := true
 
 	var resp openapi.TypesListConnectionsResponse
-	var httpResp *http.Response
+	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
-		b, err := retry.NewFibonacci(100 * time.Millisecond)
 		if resp.NextToken != nil {
-			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.UserConnectionsApi.ListActorConnections(context.Background()).NextToken(*resp.NextToken).Execute()
-				// 429 too many request
-				if httpResp.StatusCode == 429 {
-					return retry.RetryableError(err)
-				}
-				return nil
-			})
+			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+				resp, _, err = svc.UserConnectionsApi.ListActorConnections(context.Background()).NextToken(*resp.NextToken).Execute()
+				return resp, err
+			}
 		} else {
-			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.UserConnectionsApi.ListActorConnections(context.Background()).Execute()
-				// 429 too many request
-				if httpResp.StatusCode == 429 {
-					return retry.RetryableError(err)
-				}
-				return nil
-			})
+			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+				resp, _, err = svc.UserConnectionsApi.ListActorConnections(context.Background()).Execute()
+				return resp, err
+			}
 		}
+
+		response, err := plugin.RetryHydrate(ctx, d, h, listDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
 		if err != nil {
 			plugin.Logger(ctx).Error("listActorConnections", "list", err)
 			return err
 		}
 
-		if resp.HasItems() {
-			for _, connection := range *resp.Items {
+		result := response.(openapi.TypesListConnectionsResponse)
+
+		if result.HasItems() {
+			for _, connection := range *result.Items {
 				d.StreamListItem(ctx, connection)
 			}
 		}
-		if resp.NextToken == nil {
+		if result.NextToken == nil {
 			pagesLeft = false
+		} else {
+			resp.NextToken = result.NextToken
 		}
 	}
 
@@ -317,29 +306,22 @@ func getOrgConnection(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
 
 	// execute get call
 	var resp openapi.TypesConnection
-	var httpResp *http.Response
 
-	b, err := retry.NewFibonacci(100 * time.Millisecond)
-	err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-		resp, httpResp, err = svc.OrgConnectionsApi.GetOrgConnection(context.Background(), identityHandle, handle).Execute()
-		// 429 too many request
-		if httpResp.StatusCode == 429 {
-			return retry.RetryableError(err)
-		}
-		return nil
-	})
+	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+		resp, _, err = svc.OrgConnectionsApi.GetOrgConnection(context.Background(), identityHandle, handle).Execute()
+		return resp, err
+	}
+
+	response, err := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
+
+	connection := response.(openapi.TypesConnection)
 
 	if err != nil {
 		plugin.Logger(ctx).Error("getOrgConnection", "get", err)
 		return nil, err
 	}
 
-	// 404 Not Found
-	if httpResp.StatusCode == 404 {
-		return nil, nil
-	}
-
-	return resp, nil
+	return connection, nil
 }
 
 func getUserConnection(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, identityHandle string, handle string) (interface{}, error) {
@@ -352,29 +334,22 @@ func getUserConnection(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 
 	// execute get call
 	var resp openapi.TypesConnection
-	var httpResp *http.Response
 
-	b, err := retry.NewFibonacci(100 * time.Millisecond)
-	err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-		resp, httpResp, err = svc.UserConnectionsApi.GetUserConnection(context.Background(), identityHandle, handle).Execute()
-		// 429 too many request
-		if httpResp.StatusCode == 429 {
-			return retry.RetryableError(err)
-		}
-		return nil
-	})
+	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+		resp, _, err = svc.UserConnectionsApi.GetUserConnection(context.Background(), identityHandle, handle).Execute()
+		return resp, err
+	}
+
+	response, err := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
+
+	connection := response.(openapi.TypesConnection)
 
 	if err != nil {
 		plugin.Logger(ctx).Error("getUserConnection", "get", err)
 		return nil, err
 	}
 
-	// 404 Not Found
-	if httpResp.StatusCode == 404 {
-		return nil, nil
-	}
-
-	return resp, nil
+	return connection, nil
 }
 
 func getConnectionIdentityHandle(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {

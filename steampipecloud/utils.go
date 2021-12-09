@@ -2,15 +2,12 @@ package steampipecloud
 
 import (
 	"context"
-	"net/http"
-	"time"
 
-	"github.com/sethvargo/go-retry"
 	openapi "github.com/turbot/steampipe-cloud-sdk-go"
 	"github.com/turbot/steampipe-plugin-sdk/plugin"
 )
 
-func getUserIdentity(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
+func getUserIdentity(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	cacheKey := "GetUserIdentity"
 
 	// if found in cache, return the result
@@ -25,27 +22,24 @@ func getUserIdentity(ctx context.Context, d *plugin.QueryData, _ *plugin.Hydrate
 		return nil, err
 	}
 
-	var user openapi.TypesUser
-	var httpResp *http.Response
-	b, err := retry.NewFibonacci(100 * time.Millisecond)
-	err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-		user, httpResp, err = svc.UsersApi.GetActor(ctx).Execute()
-		// 429 too many request
-		if httpResp.StatusCode == 429 {
-			return retry.RetryableError(err)
-		}
-		return nil
-	})
+	var resp openapi.TypesUser
+
+	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+		resp, _, err = svc.UsersApi.GetActor(ctx).Execute()
+		return resp, err
+	}
+
+	response, err := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
+
+	user := response.(openapi.TypesUser)
+
 	if err != nil {
 		plugin.Logger(ctx).Error("GetUserIdentity", "error", err)
-		// 404 Not Found
-		if httpResp.StatusCode == 404 {
-			return nil, nil
-		}
 		return nil, err
 	}
 
 	// save to extension cache
 	d.ConnectionManager.Cache.Set(cacheKey, user)
+
 	return user, nil
 }
