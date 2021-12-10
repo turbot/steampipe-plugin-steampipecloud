@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	openapi "github.com/turbot/steampipecloud-sdk-go"
+	openapi "github.com/turbot/steampipe-cloud-sdk-go"
 
 	"github.com/turbot/steampipe-plugin-sdk/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/plugin"

@@ -4,8 +4,8 @@ go 1.17
 
 require (
 	github.com/turbot/go-kit v0.3.0
+	github.com/turbot/steampipe-cloud-sdk-go v0.0.0-20211210192429-5bc3e7d885eb
 	github.com/turbot/steampipe-plugin-sdk v1.8.2
-	github.com/turbot/steampipecloud-sdk-go v0.0.0-20211210131824-ab0aaf8d2482
 )
 
 require (

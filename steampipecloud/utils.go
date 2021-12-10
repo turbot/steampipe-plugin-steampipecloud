@@ -5,9 +5,9 @@ import (
 	"strings"
 
 	"github.com/turbot/go-kit/types"
+	openapi "github.com/turbot/steampipe-cloud-sdk-go"
 	"github.com/turbot/steampipe-plugin-sdk/plugin"
 	"github.com/turbot/steampipe-plugin-sdk/plugin/transform"
-	openapi "github.com/turbot/steampipecloud-sdk-go"
 )
 
 func getUserIdentity(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
