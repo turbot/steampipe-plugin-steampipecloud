@@ -1,6 +1,6 @@
 connection "steampipecloud" {
-  plugin   = "steampipecloud"
+  plugin = "steampipecloud"
 
-# Access Token for your SteampipeCloud account
+  # Token for your Steampipe Cloud user
   token = "YOUR_STEAMPIPECLOUD_ACCESS_TOKEN"
 }

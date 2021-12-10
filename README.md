@@ -1,13 +1,15 @@
-# steampipe-plugin-steampipecloud
+![image](https://hub.steampipe.io/images/plugins/turbot/steampipecloud-social-graphic.png)
 
-Use SQL to query infrastructure including servers, networks, identity and more from SteampipeCloud.
+# Steampipe Cloud Plugin for Steampipe
+
+Use SQL to query workspaces, connections and more from Steampipe Cloud.
 
 - **[Get started →](https://hub.steampipe.io/plugins/turbot/steampipecloud)**
 - Documentation: [Table definitions & examples](https://hub.steampipe.io/plugins/turbot/steampipecloud/tables)
-- Community: [Slack Channel](https://join.slack.com/t/steampipe/shared_invite/zt-oij778tv-lYyRTWOTMQYBVAbtPSWs3g)
+- Community: [Slack Channel](https://steampipe.io/community/join)
 - Get involved: [Issues](https://github.com/turbot/steampipe-plugin-steampipecloud/issues)
 
-## Quick Start
+## Quick start
 
 Install the plugin with [Steampipe](https://steampipe.io):
 
@@ -19,11 +21,23 @@ Run a query:
 
 ```sql
 select
-  id,
-  workspace_state,
-  identity_handle
+  user_handle,
+  email,
+  status
 from
-  steampipecloud_workspace;
+  steampipecloud_organization_member
+where
+  status = 'pending'
+```
+
+```
+> select user_handle, email, status from steampipecloud_organization_member
++-------------+------------------+----------+
+| user_handle | email            | status   |
++-------------+------------------+----------+
+| mario       | mario@turbot.com | pending  |
+| yoshi       | yoshi@turbot.com | pending  |
++-------------+------------------+----------+
 ```
 
 ## Developing
@@ -67,9 +81,9 @@ Further reading:
 
 ## Contributing
 
-Please see the [contribution guidelines](https://github.com/turbot/steampipe/blob/main/CONTRIBUTING.md) and our [code of conduct](https://github.com/turbot/steampipe/blob/main/CODE_OF_CONDUCT.md). All contributions are subject to the [Apache 2.0 open source license](https://github.com/turbot/steampipe-plugin-digitalocean/blob/main/LICENSE).
+Please see the [contribution guidelines](https://github.com/turbot/steampipe/blob/main/CONTRIBUTING.md) and our [code of conduct](https://github.com/turbot/steampipe/blob/main/CODE_OF_CONDUCT.md). All contributions are subject to the [Apache 2.0 open source license](https://github.com/turbot/steampipe-plugin-steampipecloud/blob/main/LICENSE).
 
 `help wanted` issues:
 
 - [Steampipe](https://github.com/turbot/steampipe/labels/help%20wanted)
-- [SteampipeCloud Plugin](https://github.com/turbot/steampipe-plugin-steampipecloud/labels/help%20wanted)
+- [Steampipe Cloud Plugin](https://github.com/turbot/steampipe-plugin-steampipecloud/labels/help%20wanted)
