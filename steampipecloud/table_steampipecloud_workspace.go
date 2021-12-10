@@ -12,10 +12,10 @@ import (
 
 //// TABLE DEFINITION
 
-func tableSteampipecloudWorkspace(_ context.Context) *plugin.Table {
+func tableSteampipeCloudWorkspace(_ context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "steampipecloud_workspace",
-		Description: "Steampipecloud Workspace",
+		Description: "SteampipeCloud Workspace",
 		List: &plugin.ListConfig{
 			Hydrate: listWorkspaces,
 			KeyColumns: []*plugin.KeyColumn{

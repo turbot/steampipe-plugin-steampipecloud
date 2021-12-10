@@ -12,10 +12,10 @@ import (
 
 //// TABLE DEFINITION
 
-func tableSteampipecloudAuditLog(_ context.Context) *plugin.Table {
+func tableSteampipeCloudAuditLog(_ context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "steampipecloud_audit_log",
-		Description: "Steampipecloud Audit Log",
+		Description: "SteampipeCloud Audit Log",
 		List: &plugin.ListConfig{
 			Hydrate: listAuditLogs,
 			KeyColumns: []*plugin.KeyColumn{

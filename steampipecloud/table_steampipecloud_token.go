@@ -12,10 +12,10 @@ import (
 
 //// TABLE DEFINITION
 
-func tableSteampipecloudToken(_ context.Context) *plugin.Table {
+func tableSteampipeCloudToken(_ context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "steampipecloud_token",
-		Description: "Steampipecloud Token",
+		Description: "SteampipeCloud Token",
 		List: &plugin.ListConfig{
 			Hydrate: listTokens,
 		},

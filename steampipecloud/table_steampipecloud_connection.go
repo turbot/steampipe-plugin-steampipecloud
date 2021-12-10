@@ -12,10 +12,10 @@ import (
 
 //// TABLE DEFINITION
 
-func tableSteampipecloudConnection(_ context.Context) *plugin.Table {
+func tableSteampipeCloudConnection(_ context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "steampipecloud_connection",
-		Description: "Steampipecloud Connection",
+		Description: "SteampipeCloud Connection",
 		List: &plugin.ListConfig{
 			Hydrate: listConnections,
 			KeyColumns: []*plugin.KeyColumn{

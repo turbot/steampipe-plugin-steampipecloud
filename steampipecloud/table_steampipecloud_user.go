@@ -12,10 +12,10 @@ import (
 
 //// TABLE DEFINITION
 
-func tableSteampipecloudUser(_ context.Context) *plugin.Table {
+func tableSteampipeCloudUser(_ context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "steampipecloud_user",
-		Description: "Steampipecloud User",
+		Description: "SteampipeCloud User",
 		List: &plugin.ListConfig{
 			Hydrate: getUser,
 		},

@@ -12,10 +12,10 @@ import (
 
 //// TABLE DEFINITION
 
-func tableSteampipecloudOrganization(_ context.Context) *plugin.Table {
+func tableSteampipeCloudOrganization(_ context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "steampipecloud_org",
-		Description: "Steampipecloud Organization",
+		Description: "SteampipeCloud Organization",
 		List: &plugin.ListConfig{
 			Hydrate: listOrganizations,
 		},
