@@ -2,9 +2,12 @@ package steampipecloud
 
 import (
 	"context"
+	"strings"
 
+	"github.com/turbot/go-kit/types"
 	openapi "github.com/turbot/steampipe-cloud-sdk-go"
 	"github.com/turbot/steampipe-plugin-sdk/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/plugin/transform"
 )
 
 func getUserIdentity(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
@@ -42,4 +45,19 @@ func getUserIdentity(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 	d.ConnectionManager.Cache.Set(cacheKey, user)
 
 	return user, nil
+}
+
+func setIdentityType(ctx context.Context, d *transform.TransformData) (interface{}, error) {
+	plugin.Logger(ctx).Trace("setIdentityType", "Value", d.Value)
+	if d.Value == nil {
+		return nil, nil
+	}
+	id := types.SafeString(d.Value)
+	if strings.Contains(id, "o_") {
+		return "org", nil
+	} else if strings.Contains(id, "u_") {
+		return "user", nil
+	} else {
+		return nil, nil
+	}
 }

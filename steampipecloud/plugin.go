@@ -25,7 +25,7 @@ func Plugin(ctx context.Context) *plugin.Plugin {
 			"steampipecloud_org":                  tableSteampipecloudOrganization(ctx),
 			"steampipecloud_token":                tableSteampipecloudToken(ctx),
 			"steampipecloud_user":                 tableSteampipecloudUser(ctx),
-			"steampipecloud_workspace":            tableSteampipecloudWorksapce(ctx),
+			"steampipecloud_workspace":            tableSteampipecloudWorkspace(ctx),
 			"steampipecloud_workspace_connection": tableSteampipecloudWorkspaceConnection(ctx),
 		},
 	}

@@ -12,7 +12,7 @@ import (
 
 //// TABLE DEFINITION
 
-func tableSteampipecloudWorksapce(_ context.Context) *plugin.Table {
+func tableSteampipecloudWorkspace(_ context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "steampipecloud_workspace",
 		Description: "Steampipecloud Workspace",
@@ -73,6 +73,12 @@ func tableSteampipecloudWorksapce(_ context.Context) *plugin.Table {
 				Type:        proto.ColumnType_STRING,
 				Hydrate:     getWorkspaceIdentityHandle,
 				Transform:   transform.FromValue(),
+			},
+			{
+				Name:        "identity_type",
+				Description: "The unique identifier for an identity where the action has been performed.",
+				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromField("IdentityId").Transform(setIdentityType),
 			},
 			{
 				Name:        "version_id",
@@ -270,6 +276,8 @@ func listActorWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.Hyd
 
 	return nil
 }
+
+//// HYDRATE FUNCTIONS
 
 func getWorkspace(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	identityHandle := d.KeyColumnQuals["identity_handle"].GetStringValue()
