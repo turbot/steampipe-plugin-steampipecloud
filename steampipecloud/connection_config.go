@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"os"
 
-	openapiclient "github.com/turbot/steampipe-cloud-sdk-go"
 	"github.com/turbot/steampipe-plugin-sdk/plugin"
 	"github.com/turbot/steampipe-plugin-sdk/plugin/schema"
+	openapiclient "github.com/turbot/steampipecloud-sdk-go"
 )
 
 type steampipecloudConfig struct {
