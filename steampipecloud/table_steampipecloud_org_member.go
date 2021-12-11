@@ -13,13 +13,13 @@ import (
 
 //// TABLE DEFINITION
 
-func tableSteampipeCloudMember(_ context.Context) *plugin.Table {
+func tableSteampipeCloudOrgMember(_ context.Context) *plugin.Table {
 	return &plugin.Table{
-		Name:        "steampipecloud_member",
-		Description: "SteampipeCloud Member",
+		Name:        "steampipecloud_org_member",
+		Description: "SteampipeCloud Organization Member",
 		List: &plugin.ListConfig{
 			ParentHydrate: listOrganizations,
-			Hydrate:       listMembers,
+			Hydrate:       listOrgMembers,
 			KeyColumns: []*plugin.KeyColumn{
 				{
 					Name:    "status",
@@ -93,7 +93,7 @@ func tableSteampipeCloudMember(_ context.Context) *plugin.Table {
 
 //// LIST FUNCTION
 
-func listMembers(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+func listOrgMembers(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	org := h.Item.(*openapi.TypesOrg)
 
 	status := d.KeyColumnQuals["status"].GetStringValue()
@@ -115,7 +115,7 @@ func listMembers(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData
 	}
 
 	if err != nil {
-		plugin.Logger(ctx).Error("listConnections", "list", err)
+		plugin.Logger(ctx).Error("listOrgMembers", "list", err)
 		return nil, err
 	}
 	return nil, nil

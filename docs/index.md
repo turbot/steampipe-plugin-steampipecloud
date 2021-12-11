@@ -2,7 +2,7 @@
 organization: Turbot
 category: ["saas"]
 icon_url: "/images/plugins/turbot/steampipecloud.svg"
-brand_color: "#008bcf"
+brand_color: "#a42a2d"
 display_name: "Steampipe Cloud"
 short_name: "steampipecloud"
 description: "Steampipe plugin for querying workspaces, connections and more from Steampipe Cloud."

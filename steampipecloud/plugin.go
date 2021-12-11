@@ -21,7 +21,7 @@ func Plugin(ctx context.Context) *plugin.Plugin {
 		TableMap: map[string]*plugin.Table{
 			"steampipecloud_audit_log":            tableSteampipeCloudAuditLog(ctx),
 			"steampipecloud_connection":           tableSteampipeCloudConnection(ctx),
-			"steampipecloud_member":               tableSteampipeCloudMember(ctx),
+			"steampipecloud_org_member":           tableSteampipeCloudOrgMember(ctx),
 			"steampipecloud_org":                  tableSteampipeCloudOrganization(ctx),
 			"steampipecloud_token":                tableSteampipeCloudToken(ctx),
 			"steampipecloud_user":                 tableSteampipeCloudUser(ctx),
