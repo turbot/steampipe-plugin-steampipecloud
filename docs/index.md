@@ -24,13 +24,13 @@ select
   email,
   status
 from
-  steampipecloud_organization_member
+  steampipecloud_org_member
 where
   status = 'pending'
 ```
 
 ```
-> select user_handle, email, status from steampipecloud_organization_member
+> select user_handle, email, status from steampipecloud_org_member
 +-------------+------------------+----------+
 | user_handle | email            | status   |
 +-------------+------------------+----------+
