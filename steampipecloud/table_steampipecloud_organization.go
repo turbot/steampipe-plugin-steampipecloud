@@ -14,7 +14,7 @@ import (
 
 func tableSteampipeCloudOrganization(_ context.Context) *plugin.Table {
 	return &plugin.Table{
-		Name:        "steampipecloud_org",
+		Name:        "steampipecloud_organization",
 		Description: "SteampipeCloud Organization",
 		List: &plugin.ListConfig{
 			Hydrate: listOrganizations,
