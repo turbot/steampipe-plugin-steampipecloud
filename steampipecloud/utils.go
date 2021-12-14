@@ -28,7 +28,7 @@ func getUserIdentity(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 	var resp openapi.TypesUser
 
 	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-		resp, _, err = svc.UsersApi.GetActor(ctx).Execute()
+		resp, _, err = svc.Actors.Get(ctx).Execute()
 		return resp, err
 	}
 

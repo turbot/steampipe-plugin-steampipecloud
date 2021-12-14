@@ -80,14 +80,21 @@ func tableSteampipeCloudWorkspaceConnection(_ context.Context) *plugin.Table {
 func listWorkspaceConnections(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	workspace := h.Item.(openapi.TypesWorkspace)
 
+	// Create Session
+	svc, err := connect(ctx, d)
+	if err != nil {
+		plugin.Logger(ctx).Error("listWorkspaceConnections", "connection_error", err)
+		return nil, err
+	}
+
 	getUserIdentityCached := plugin.HydrateFunc(getUserIdentity).WithCache()
 	commonData, err := getUserIdentityCached(ctx, d, h)
 	user := commonData.(openapi.TypesUser)
 
 	if workspace.Identity.Handle == user.Handle {
-		err = listUserWorkspaceConnectionAssociations(ctx, d, h, user.Handle, workspace.Handle)
+		err = listUserWorkspaceConnectionAssociations(ctx, d, h, user.Handle, workspace.Handle, svc)
 	} else {
-		err = listOrgWorkspaceConnectionAssociations(ctx, d, h, workspace.Identity.Handle, workspace.Handle)
+		err = listOrgWorkspaceConnectionAssociations(ctx, d, h, workspace.Identity.Handle, workspace.Handle, svc)
 	}
 
 	if err != nil {
@@ -97,13 +104,8 @@ func listWorkspaceConnections(ctx context.Context, d *plugin.QueryData, h *plugi
 	return nil, nil
 }
 
-func listUserWorkspaceConnectionAssociations(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, userHandle string, workspaceHandle string) error {
-	// Create Session
-	svc, err := connect(ctx, d)
-	if err != nil {
-		plugin.Logger(ctx).Error("listUserWorkspaceConnectionAssociations", "connection_error", err)
-		return err
-	}
+func listUserWorkspaceConnectionAssociations(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, userHandle string, workspaceHandle string, svc *openapi.APIClient) error {
+	var err error
 
 	// execute list call
 	pagesLeft := true
@@ -113,12 +115,12 @@ func listUserWorkspaceConnectionAssociations(ctx context.Context, d *plugin.Quer
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserWorkspaceConnectionAssociationsApi.ListUserWorkspaceConnectionAssociations(context.Background(), userHandle, workspaceHandle).NextToken(*resp.NextToken).Execute()
+				resp, _, err = svc.UserWorkspaceConnectionAssociations.List(context.Background(), userHandle, workspaceHandle).NextToken(*resp.NextToken).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserWorkspaceConnectionAssociationsApi.ListUserWorkspaceConnectionAssociations(context.Background(), userHandle, workspaceHandle).Execute()
+				resp, _, err = svc.UserWorkspaceConnectionAssociations.List(context.Background(), userHandle, workspaceHandle).Execute()
 				return resp, err
 			}
 		}
@@ -147,13 +149,8 @@ func listUserWorkspaceConnectionAssociations(ctx context.Context, d *plugin.Quer
 	return nil
 }
 
-func listOrgWorkspaceConnectionAssociations(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, orgHandle string, workspaceHandle string) error {
-	// Create Session
-	svc, err := connect(ctx, d)
-	if err != nil {
-		plugin.Logger(ctx).Error("listOrgWorkspaceConnectionAssociations", "connection_error", err)
-		return err
-	}
+func listOrgWorkspaceConnectionAssociations(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, orgHandle string, workspaceHandle string, svc *openapi.APIClient) error {
+	var err error
 
 	// execute list call
 	pagesLeft := true
@@ -163,12 +160,12 @@ func listOrgWorkspaceConnectionAssociations(ctx context.Context, d *plugin.Query
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgWorkspaceConnectionAssociationsApi.ListOrgWorkspaceConnectionAssociations(context.Background(), orgHandle, workspaceHandle).NextToken(*resp.NextToken).Execute()
+				resp, _, err = svc.OrgWorkspaceConnectionAssociations.List(context.Background(), orgHandle, workspaceHandle).NextToken(*resp.NextToken).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgWorkspaceConnectionAssociationsApi.ListOrgWorkspaceConnectionAssociations(context.Background(), orgHandle, workspaceHandle).Execute()
+				resp, _, err = svc.OrgWorkspaceConnectionAssociations.List(context.Background(), orgHandle, workspaceHandle).Execute()
 				return resp, err
 			}
 		}

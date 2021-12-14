@@ -103,6 +103,13 @@ func tableSteampipeCloudWorkspace(_ context.Context) *plugin.Table {
 //// LIST FUNCTION
 
 func listWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	// Create Session
+	svc, err := connect(ctx, d)
+	if err != nil {
+		plugin.Logger(ctx).Error("listWorkspaces", "connection_error", err)
+		return nil, err
+	}
+
 	getUserIdentityCached := plugin.HydrateFunc(getUserIdentity).WithCache()
 	commonData, err := getUserIdentityCached(ctx, d, h)
 	user := commonData.(openapi.TypesUser)
@@ -110,11 +117,11 @@ func listWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateD
 	handle := d.KeyColumnQuals["identity_handle"].GetStringValue()
 
 	if handle == "" {
-		err = listActorWorkspaces(ctx, d, h)
+		err = listActorWorkspaces(ctx, d, h, svc)
 	} else if handle == user.Handle {
-		err = listUserWorkspaces(ctx, d, h, handle)
+		err = listUserWorkspaces(ctx, d, h, handle, svc)
 	} else {
-		err = listOrgWorkspaces(ctx, d, h, handle)
+		err = listOrgWorkspaces(ctx, d, h, handle, svc)
 	}
 
 	if err != nil {
@@ -124,13 +131,8 @@ func listWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateD
 	return nil, nil
 }
 
-func listUserWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string) error {
-	// Create Session
-	svc, err := connect(ctx, d)
-	if err != nil {
-		plugin.Logger(ctx).Error("listUserWorkspaces", "connection_error", err)
-		return err
-	}
+func listUserWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string, svc *openapi.APIClient) error {
+	var err error
 
 	// execute list call
 	pagesLeft := true
@@ -141,12 +143,12 @@ func listUserWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserWorkspacesApi.ListUserWorkspaces(context.Background(), handle).NextToken(*resp.NextToken).Execute()
+				resp, _, err = svc.UserWorkspaces.List(context.Background(), handle).NextToken(*resp.NextToken).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserWorkspacesApi.ListUserWorkspaces(context.Background(), handle).Execute()
+				resp, _, err = svc.UserWorkspaces.List(context.Background(), handle).Execute()
 				return resp, err
 			}
 		}
@@ -175,13 +177,8 @@ func listUserWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 	return nil
 }
 
-func listOrgWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string) error {
-	// Create Session
-	svc, err := connect(ctx, d)
-	if err != nil {
-		plugin.Logger(ctx).Error("listOrgWorkspaces", "connection_error", err)
-		return err
-	}
+func listOrgWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string, svc *openapi.APIClient) error {
+	var err error
 
 	// execute list call
 	pagesLeft := true
@@ -192,12 +189,12 @@ func listOrgWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgWorkspacesApi.ListOrgWorkspaces(context.Background(), handle).NextToken(*resp.NextToken).Execute()
+				resp, _, err = svc.OrgWorkspaces.List(context.Background(), handle).NextToken(*resp.NextToken).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgWorkspacesApi.ListOrgWorkspaces(context.Background(), handle).Execute()
+				resp, _, err = svc.OrgWorkspaces.List(context.Background(), handle).Execute()
 				return resp, err
 			}
 		}
@@ -226,13 +223,8 @@ func listOrgWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 	return nil
 }
 
-func listActorWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) error {
-	// Create Session
-	svc, err := connect(ctx, d)
-	if err != nil {
-		plugin.Logger(ctx).Error("listActorWorkspaces", "connection_error", err)
-		return err
-	}
+func listActorWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, svc *openapi.APIClient) error {
+	var err error
 
 	// execute list call
 	pagesLeft := true
@@ -243,12 +235,12 @@ func listActorWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.Hyd
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserWorkspacesApi.ListActorWorkspaces(context.Background()).NextToken(*resp.NextToken).Execute()
+				resp, _, err = svc.Actors.ListWorkspaces(context.Background()).NextToken(*resp.NextToken).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserWorkspacesApi.ListActorWorkspaces(context.Background()).Execute()
+				resp, _, err = svc.Actors.ListWorkspaces(context.Background()).Execute()
 				return resp, err
 			}
 		}
@@ -287,15 +279,23 @@ func getWorkspace(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDat
 	if identityHandle == "" || handle == "" {
 		return nil, nil
 	}
+
+	// Create Session
+	svc, err := connect(ctx, d)
+	if err != nil {
+		plugin.Logger(ctx).Error("getWorkspace", "connection_error", err)
+		return nil, err
+	}
+
 	getUserIdentityCached := plugin.HydrateFunc(getUserIdentity).WithCache()
 	commonData, err := getUserIdentityCached(ctx, d, h)
 	user := commonData.(openapi.TypesUser)
 	var resp interface{}
 
 	if identityHandle == user.Handle {
-		resp, err = getUserWorkspace(ctx, d, h, identityHandle, handle)
+		resp, err = getUserWorkspace(ctx, d, h, identityHandle, handle, svc)
 	} else {
-		resp, err = getOrgWorkspace(ctx, d, h, identityHandle, handle)
+		resp, err = getOrgWorkspace(ctx, d, h, identityHandle, handle, svc)
 	}
 
 	if err != nil {
@@ -310,19 +310,14 @@ func getWorkspace(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDat
 	return resp.(openapi.TypesWorkspace), nil
 }
 
-func getOrgWorkspace(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, identityHandle string, handle string) (interface{}, error) {
-	// Create Session
-	svc, err := connect(ctx, d)
-	if err != nil {
-		plugin.Logger(ctx).Error("getOrgWorkspace", "connection_error", err)
-		return nil, err
-	}
+func getOrgWorkspace(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, identityHandle string, handle string, svc *openapi.APIClient) (interface{}, error) {
+	var err error
 
 	// execute get call
 	var resp openapi.TypesWorkspace
 
 	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-		resp, _, err = svc.OrgWorkspacesApi.GetOrgWorkspace(context.Background(), identityHandle, handle).Execute()
+		resp, _, err = svc.OrgWorkspaces.Get(context.Background(), identityHandle, handle).Execute()
 		return resp, err
 	}
 
@@ -338,19 +333,14 @@ func getOrgWorkspace(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 	return workspace, nil
 }
 
-func getUserWorkspace(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, identityHandle string, handle string) (interface{}, error) {
-	// Create Session
-	svc, err := connect(ctx, d)
-	if err != nil {
-		plugin.Logger(ctx).Error("getUserWorkspace", "connection_error", err)
-		return nil, err
-	}
+func getUserWorkspace(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, identityHandle string, handle string, svc *openapi.APIClient) (interface{}, error) {
+	var err error
 
 	// execute get call
 	var resp openapi.TypesWorkspace
 
 	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-		resp, _, err = svc.UserWorkspacesApi.GetUserWorkspace(context.Background(), identityHandle, handle).Execute()
+		resp, _, err = svc.UserWorkspaces.Get(context.Background(), identityHandle, handle).Execute()
 		return resp, err
 	}
 

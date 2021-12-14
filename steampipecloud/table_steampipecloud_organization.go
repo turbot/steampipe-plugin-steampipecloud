@@ -89,12 +89,12 @@ func listOrganizations(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UsersApi.ListOrgUsers(context.Background(), user.Handle).NextToken(*resp.NextToken).Execute()
+				resp, _, err = svc.Users.ListOrgs(context.Background(), user.Handle).NextToken(*resp.NextToken).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UsersApi.ListOrgUsers(context.Background(), user.Handle).Execute()
+				resp, _, err = svc.Users.ListOrgs(context.Background(), user.Handle).Execute()
 				return resp, err
 			}
 		}

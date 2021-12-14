@@ -136,12 +136,12 @@ func listAcceptedOrgMembers(ctx context.Context, d *plugin.QueryData, h *plugin.
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgMembersApi.ListAcceptedOrgMembers(context.Background(), handle).NextToken(*resp.NextToken).Execute()
+				resp, _, err = svc.OrgMembers.ListAccepted(context.Background(), handle).NextToken(*resp.NextToken).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgMembersApi.ListAcceptedOrgMembers(context.Background(), handle).Execute()
+				resp, _, err = svc.OrgMembers.ListAccepted(context.Background(), handle).Execute()
 				return resp, err
 			}
 		}
@@ -185,12 +185,12 @@ func listInvitedOrgMembers(ctx context.Context, d *plugin.QueryData, h *plugin.H
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgMembersApi.ListInvitedOrgMembers(context.Background(), handle).NextToken(*resp.NextToken).Execute()
+				resp, _, err = svc.OrgMembers.ListInvited(context.Background(), handle).NextToken(*resp.NextToken).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgMembersApi.ListInvitedOrgMembers(context.Background(), handle).Execute()
+				resp, _, err = svc.OrgMembers.ListInvited(context.Background(), handle).Execute()
 				return resp, err
 			}
 		}

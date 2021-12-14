@@ -102,6 +102,13 @@ func tableSteampipeCloudAuditLog(_ context.Context) *plugin.Table {
 //// LIST FUNCTION
 
 func listAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	// Create Session
+	svc, err := connect(ctx, d)
+	if err != nil {
+		plugin.Logger(ctx).Error("listAuditLogs", "connection_error", err)
+		return nil, err
+	}
+
 	getUserIdentityCached := plugin.HydrateFunc(getUserIdentity).WithCache()
 	commonData, err := getUserIdentityCached(ctx, d, h)
 	user := commonData.(openapi.TypesUser)
@@ -109,9 +116,9 @@ func listAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDa
 	handle := d.KeyColumnQuals["identity_handle"].GetStringValue()
 
 	if handle == user.Handle {
-		err = listUserAuditLogs(ctx, d, h, handle)
+		err = listUserAuditLogs(ctx, d, h, handle, svc)
 	} else {
-		err = listOrgAuditLogs(ctx, d, h, handle)
+		err = listOrgAuditLogs(ctx, d, h, handle, svc)
 	}
 
 	if err != nil {
@@ -121,13 +128,8 @@ func listAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDa
 	return nil, nil
 }
 
-func listOrgAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string) error {
-	// Create Session
-	svc, err := connect(ctx, d)
-	if err != nil {
-		plugin.Logger(ctx).Error("listOrgAuditLogs", "connection_error", err)
-		return err
-	}
+func listOrgAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string, svc *openapi.APIClient) error {
+	var err error
 
 	// execute list call
 	pagesLeft := true
@@ -137,12 +139,12 @@ func listOrgAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgsApi.ListOrgAuditLogs(context.Background(), handle).NextToken(*resp.NextToken).Execute()
+				resp, _, err = svc.Orgs.ListAuditLogs(context.Background(), handle).NextToken(*resp.NextToken).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgsApi.ListOrgAuditLogs(context.Background(), handle).Execute()
+				resp, _, err = svc.Orgs.ListAuditLogs(context.Background(), handle).Execute()
 				return resp, err
 			}
 		}
@@ -171,13 +173,8 @@ func listOrgAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
 	return nil
 }
 
-func listUserAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string) error {
-	// Create Session
-	svc, err := connect(ctx, d)
-	if err != nil {
-		plugin.Logger(ctx).Error("listUserAuditLogs", "connection_error", err)
-		return err
-	}
+func listUserAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string, svc *openapi.APIClient) error {
+	var err error
 
 	// execute list call
 	pagesLeft := true
@@ -187,12 +184,12 @@ func listUserAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UsersApi.ListUserAuditLogs(context.Background(), handle).NextToken(*resp.NextToken).Execute()
+				resp, _, err = svc.Users.ListAuditLogs(context.Background(), handle).NextToken(*resp.NextToken).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UsersApi.ListUserAuditLogs(context.Background(), handle).Execute()
+				resp, _, err = svc.Users.ListAuditLogs(context.Background(), handle).Execute()
 				return resp, err
 			}
 		}
