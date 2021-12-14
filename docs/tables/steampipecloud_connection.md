@@ -27,7 +27,7 @@ select
 from
   steampipecloud_connection
 where
-  identity_id like 'u%';
+  identity_type = 'user';
 ```
 
 ### List org workspaces
@@ -41,5 +41,5 @@ select
 from
   steampipecloud_connection
 where
-  identity_id like 'o%';
+  identity_type = 'org';
 ```
