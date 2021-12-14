@@ -2,10 +2,7 @@ package steampipecloud
 
 import (
 	"context"
-	"net/http"
-	"time"
 
-	"github.com/sethvargo/go-retry"
 	openapi "github.com/turbot/steampipe-cloud-sdk-go"
 
 	"github.com/turbot/steampipe-plugin-sdk/grpc/proto"
@@ -15,10 +12,10 @@ import (
 
 //// TABLE DEFINITION
 
-func tableSteampipecloudAuditLog(_ context.Context) *plugin.Table {
+func tableSteampipeCloudAuditLog(_ context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "steampipecloud_audit_log",
-		Description: "Steampipecloud Audit Log",
+		Description: "SteampipeCloud Audit Log",
 		List: &plugin.ListConfig{
 			Hydrate: listAuditLogs,
 			KeyColumns: []*plugin.KeyColumn{
@@ -105,6 +102,13 @@ func tableSteampipecloudAuditLog(_ context.Context) *plugin.Table {
 //// LIST FUNCTION
 
 func listAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	// Create Session
+	svc, err := connect(ctx, d)
+	if err != nil {
+		plugin.Logger(ctx).Error("listAuditLogs", "connection_error", err)
+		return nil, err
+	}
+
 	getUserIdentityCached := plugin.HydrateFunc(getUserIdentity).WithCache()
 	commonData, err := getUserIdentityCached(ctx, d, h)
 	user := commonData.(openapi.TypesUser)
@@ -112,9 +116,9 @@ func listAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDa
 	handle := d.KeyColumnQuals["identity_handle"].GetStringValue()
 
 	if handle == user.Handle {
-		err = listUserAuditLogs(ctx, d, h, handle)
+		err = listUserAuditLogs(ctx, d, h, handle, svc)
 	} else {
-		err = listOrgAuditLogs(ctx, d, h, handle)
+		err = listOrgAuditLogs(ctx, d, h, handle, svc)
 	}
 
 	if err != nil {
@@ -124,108 +128,90 @@ func listAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDa
 	return nil, nil
 }
 
-func listOrgAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string) error {
-	// Create Session
-	svc, err := connect(ctx, d)
-	if err != nil {
-		plugin.Logger(ctx).Error("listOrgAuditLogs", "connection_error", err)
-		return err
-	}
+func listOrgAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string, svc *openapi.APIClient) error {
+	var err error
 
 	// execute list call
 	pagesLeft := true
 	var resp openapi.TypesListAuditLogsResponse
-	var httpResp *http.Response
+	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
-		b, err := retry.NewFibonacci(100 * time.Millisecond)
 		if resp.NextToken != nil {
-			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.OrgsApi.ListOrgAuditLogs(context.Background(), handle).NextToken(*resp.NextToken).Execute()
-				// 429 too many request
-				if httpResp.StatusCode == 429 {
-					return retry.RetryableError(err)
-				}
-				return nil
-			})
+			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+				resp, _, err = svc.Orgs.ListAuditLogs(context.Background(), handle).NextToken(*resp.NextToken).Execute()
+				return resp, err
+			}
 		} else {
-			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.OrgsApi.ListOrgAuditLogs(context.Background(), handle).Execute()
-				// 429 too many request
-				if httpResp.StatusCode == 429 {
-					return retry.RetryableError(err)
-				}
-				return nil
-			})
+			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+				resp, _, err = svc.Orgs.ListAuditLogs(context.Background(), handle).Execute()
+				return resp, err
+			}
 		}
+
+		response, err := plugin.RetryHydrate(ctx, d, h, listDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
 		if err != nil {
 			plugin.Logger(ctx).Error("listOrgAuditLogs", "list", err)
 			return err
 		}
 
-		if resp.HasItems() {
-			for _, log := range *resp.Items {
+		result := response.(openapi.TypesListAuditLogsResponse)
+
+		if result.HasItems() {
+			for _, log := range *result.Items {
 				d.StreamListItem(ctx, log)
 			}
 		}
-		if resp.NextToken == nil {
+		if result.NextToken == nil {
 			pagesLeft = false
+		} else {
+			resp.NextToken = result.NextToken
 		}
 	}
 
 	return nil
 }
 
-func listUserAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string) error {
-	// Create Session
-	svc, err := connect(ctx, d)
-	if err != nil {
-		plugin.Logger(ctx).Error("listUserAuditLogs", "connection_error", err)
-		return err
-	}
+func listUserAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string, svc *openapi.APIClient) error {
+	var err error
 
 	// execute list call
 	pagesLeft := true
 	var resp openapi.TypesListAuditLogsResponse
-	var httpResp *http.Response
+	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
-		b, err := retry.NewFibonacci(100 * time.Millisecond)
 		if resp.NextToken != nil {
-			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.UsersApi.ListUserAuditLogs(context.Background(), handle).NextToken(*resp.NextToken).Execute()
-				// 429 too many request
-				if httpResp.StatusCode == 429 {
-					return retry.RetryableError(err)
-				}
-				return nil
-			})
-
+			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+				resp, _, err = svc.Users.ListAuditLogs(context.Background(), handle).NextToken(*resp.NextToken).Execute()
+				return resp, err
+			}
 		} else {
-			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.UsersApi.ListUserAuditLogs(context.Background(), handle).Execute()
-				// 429 too many request
-				if httpResp.StatusCode == 429 {
-					return retry.RetryableError(err)
-				}
-				return nil
-			})
-
+			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+				resp, _, err = svc.Users.ListAuditLogs(context.Background(), handle).Execute()
+				return resp, err
+			}
 		}
+
+		response, err := plugin.RetryHydrate(ctx, d, h, listDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
 		if err != nil {
 			plugin.Logger(ctx).Error("listUserAuditLogs", "list", err)
 			return err
 		}
 
-		if resp.HasItems() {
-			for _, log := range *resp.Items {
+		result := response.(openapi.TypesListAuditLogsResponse)
+
+		if result.HasItems() {
+			for _, log := range *result.Items {
 				d.StreamListItem(ctx, log)
 			}
 		}
 		if resp.NextToken == nil {
 			pagesLeft = false
+		} else {
+			resp.NextToken = result.NextToken
 		}
 	}
 

@@ -19,14 +19,14 @@ func Plugin(ctx context.Context) *plugin.Plugin {
 			Schema:      ConfigSchema,
 		},
 		TableMap: map[string]*plugin.Table{
-			"steampipecloud_audit_log":            tableSteampipecloudAuditLog(ctx),
-			"steampipecloud_connection":           tableSteampipecloudConnection(ctx),
-			"steampipecloud_member":               tableSteampipecloudMember(ctx),
-			"steampipecloud_org":                  tableSteampipecloudOrganization(ctx),
-			"steampipecloud_token":                tableSteampipecloudToken(ctx),
-			"steampipecloud_user":                 tableSteampipecloudUser(ctx),
-			"steampipecloud_workspace":            tableSteampipecloudWorksapce(ctx),
-			"steampipecloud_workspace_connection": tableSteampipecloudWorkspaceConnection(ctx),
+			"steampipecloud_audit_log":            tableSteampipeCloudAuditLog(ctx),
+			"steampipecloud_connection":           tableSteampipeCloudConnection(ctx),
+			"steampipecloud_organization_member":  tableSteampipeCloudOrganizationMember(ctx),
+			"steampipecloud_organization":         tableSteampipeCloudOrganization(ctx),
+			"steampipecloud_token":                tableSteampipeCloudToken(ctx),
+			"steampipecloud_user":                 tableSteampipeCloudUser(ctx),
+			"steampipecloud_workspace":            tableSteampipeCloudWorkspace(ctx),
+			"steampipecloud_workspace_connection": tableSteampipeCloudWorkspaceConnection(ctx),
 		},
 	}
 

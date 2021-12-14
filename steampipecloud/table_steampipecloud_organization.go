@@ -2,10 +2,7 @@ package steampipecloud
 
 import (
 	"context"
-	"net/http"
-	"time"
 
-	"github.com/sethvargo/go-retry"
 	openapi "github.com/turbot/steampipe-cloud-sdk-go"
 
 	"github.com/turbot/steampipe-plugin-sdk/grpc/proto"
@@ -15,10 +12,10 @@ import (
 
 //// TABLE DEFINITION
 
-func tableSteampipecloudOrganization(_ context.Context) *plugin.Table {
+func tableSteampipeCloudOrganization(_ context.Context) *plugin.Table {
 	return &plugin.Table{
-		Name:        "steampipecloud_org",
-		Description: "Steampipecloud Organization",
+		Name:        "steampipecloud_organization",
+		Description: "SteampipeCloud Organization",
 		List: &plugin.ListConfig{
 			Hydrate: listOrganizations,
 		},
@@ -87,42 +84,40 @@ func listOrganizations(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 	pagesLeft := true
 
 	var resp openapi.TypesListUserOrgsResponse
-	var httpResp *http.Response
+	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
-		b, err := retry.NewFibonacci(100 * time.Millisecond)
 		if resp.NextToken != nil {
-			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.UsersApi.ListOrgUsers(context.Background(), user.Handle).NextToken(*resp.NextToken).Execute()
-				// 429 too many request
-				if httpResp.StatusCode == 429 {
-					return retry.RetryableError(err)
-				}
-				return nil
-			})
+			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+				resp, _, err = svc.Users.ListOrgs(context.Background(), user.Handle).NextToken(*resp.NextToken).Execute()
+				return resp, err
+			}
 		} else {
-			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.UsersApi.ListOrgUsers(context.Background(), user.Handle).Execute()
-				// 429 too many request
-				if httpResp.StatusCode == 429 {
-					return retry.RetryableError(err)
-				}
-				return nil
-			})
+			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+				resp, _, err = svc.Users.ListOrgs(context.Background(), user.Handle).Execute()
+				return resp, err
+			}
 		}
+
+		response, err := plugin.RetryHydrate(ctx, d, h, listDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
 		if err != nil {
 			plugin.Logger(ctx).Error("listOrganizations", "list", err)
 			return nil, err
 		}
-		if resp.HasItems() {
-			for _, org := range *resp.Items {
+
+		result := response.(openapi.TypesListUserOrgsResponse)
+
+		if result.HasItems() {
+			for _, org := range *result.Items {
 				d.StreamListItem(ctx, org.Org)
 			}
 		}
 
-		if resp.NextToken == nil {
+		if result.NextToken == nil {
 			pagesLeft = false
+		} else {
+			resp.NextToken = result.NextToken
 		}
 	}
 

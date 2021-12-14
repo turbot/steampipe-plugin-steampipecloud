@@ -2,10 +2,7 @@ package steampipecloud
 
 import (
 	"context"
-	"net/http"
-	"time"
 
-	"github.com/sethvargo/go-retry"
 	openapi "github.com/turbot/steampipe-cloud-sdk-go"
 
 	"github.com/turbot/steampipe-plugin-sdk/grpc/proto"
@@ -15,10 +12,10 @@ import (
 
 //// TABLE DEFINITION
 
-func tableSteampipecloudToken(_ context.Context) *plugin.Table {
+func tableSteampipeCloudToken(_ context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "steampipecloud_token",
-		Description: "Steampipecloud Token",
+		Description: "SteampipeCloud Token",
 		List: &plugin.ListConfig{
 			Hydrate: listTokens,
 		},
@@ -86,41 +83,39 @@ func listTokens(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData)
 	pagesLeft := true
 
 	var resp openapi.TypesListTokensResponse
-	var httpResp *http.Response
+	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
-		b, err := retry.NewFibonacci(100 * time.Millisecond)
 		if resp.NextToken != nil {
-			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.UserTokensApi.ListTokens(context.Background(), user.Handle).NextToken(*resp.NextToken).Execute()
-				// 429 too many request
-				if httpResp.StatusCode == 429 {
-					return retry.RetryableError(err)
-				}
-				return nil
-			})
+			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+				resp, _, err = svc.UserTokens.List(context.Background(), user.Handle).NextToken(*resp.NextToken).Execute()
+				return resp, err
+			}
 		} else {
-			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.UserTokensApi.ListTokens(context.Background(), user.Handle).Execute()
-				// 429 too many request
-				if httpResp.StatusCode == 429 {
-					return retry.RetryableError(err)
-				}
-				return nil
-			})
+			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+				resp, _, err = svc.UserTokens.List(context.Background(), user.Handle).Execute()
+				return resp, err
+			}
 		}
+
+		response, err := plugin.RetryHydrate(ctx, d, h, listDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
 		if err != nil {
 			plugin.Logger(ctx).Error("listTokens", "list", err)
 			return nil, err
 		}
-		if resp.HasItems() {
-			for _, token := range *resp.Items {
+
+		result := response.(openapi.TypesListTokensResponse)
+
+		if result.HasItems() {
+			for _, token := range *result.Items {
 				d.StreamListItem(ctx, token)
 			}
 		}
-		if resp.NextToken == nil {
+		if result.NextToken == nil {
 			pagesLeft = false
+		} else {
+			resp.NextToken = result.NextToken
 		}
 	}
 
@@ -146,28 +141,22 @@ func getToken(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (
 	user := commonData.(openapi.TypesUser)
 
 	var resp openapi.TypesToken
-	var httpResp *http.Response
 
 	// execute get call
-	b, err := retry.NewFibonacci(100 * time.Millisecond)
-	err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-		resp, httpResp, err = svc.UserTokensApi.GetToken(context.Background(), id, user.Handle).Execute()
-		// 429 too many request
-		if httpResp.StatusCode == 429 {
-			return retry.RetryableError(err)
-		}
-		return nil
-	})
+
+	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+		resp, _, err = svc.UserTokens.Get(context.Background(), id, user.Handle).Execute()
+		return resp, err
+	}
+
+	response, err := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
+
+	token := response.(openapi.TypesToken)
 
 	if err != nil {
 		plugin.Logger(ctx).Error("getToken", "get", err)
 		return nil, err
 	}
 
-	// 404 Not Found
-	if httpResp.StatusCode == 404 {
-		return nil, nil
-	}
-
-	return resp, nil
+	return token, nil
 }
