@@ -12,10 +12,10 @@ import (
 
 //// TABLE DEFINITION
 
-func tableSteampipecloudUser(_ context.Context) *plugin.Table {
+func tableSteampipeCloudUser(_ context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "steampipecloud_user",
-		Description: "Steampipecloud User",
+		Description: "SteampipeCloud User",
 		List: &plugin.ListConfig{
 			Hydrate: getUser,
 		},
@@ -84,6 +84,13 @@ func tableSteampipecloudUser(_ context.Context) *plugin.Table {
 //// LIST FUNCTION
 
 func getUser(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	// Create Session
+	_, err := connect(ctx, d)
+	if err != nil {
+		plugin.Logger(ctx).Error("getUser", "connection_error", err)
+		return nil, err
+	}
+
 	getUserIdentityCached := plugin.HydrateFunc(getUserIdentity).WithCache()
 	commonData, err := getUserIdentityCached(ctx, d, h)
 	if err != nil {

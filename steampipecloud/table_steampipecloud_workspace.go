@@ -2,10 +2,7 @@ package steampipecloud
 
 import (
 	"context"
-	"net/http"
-	"time"
 
-	"github.com/sethvargo/go-retry"
 	openapi "github.com/turbot/steampipe-cloud-sdk-go"
 
 	"github.com/turbot/steampipe-plugin-sdk/grpc/proto"
@@ -15,10 +12,10 @@ import (
 
 //// TABLE DEFINITION
 
-func tableSteampipecloudWorksapce(_ context.Context) *plugin.Table {
+func tableSteampipeCloudWorkspace(_ context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "steampipecloud_workspace",
-		Description: "Steampipecloud Workspace",
+		Description: "SteampipeCloud Workspace",
 		List: &plugin.ListConfig{
 			Hydrate: listWorkspaces,
 			KeyColumns: []*plugin.KeyColumn{
@@ -78,6 +75,12 @@ func tableSteampipecloudWorksapce(_ context.Context) *plugin.Table {
 				Transform:   transform.FromValue(),
 			},
 			{
+				Name:        "identity_type",
+				Description: "The unique identifier for an identity where the action has been performed.",
+				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromField("IdentityId").Transform(setIdentityType),
+			},
+			{
 				Name:        "version_id",
 				Description: "The current version id of the workspace.",
 				Type:        proto.ColumnType_INT,
@@ -100,6 +103,13 @@ func tableSteampipecloudWorksapce(_ context.Context) *plugin.Table {
 //// LIST FUNCTION
 
 func listWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	// Create Session
+	svc, err := connect(ctx, d)
+	if err != nil {
+		plugin.Logger(ctx).Error("listWorkspaces", "connection_error", err)
+		return nil, err
+	}
+
 	getUserIdentityCached := plugin.HydrateFunc(getUserIdentity).WithCache()
 	commonData, err := getUserIdentityCached(ctx, d, h)
 	user := commonData.(openapi.TypesUser)
@@ -107,11 +117,11 @@ func listWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateD
 	handle := d.KeyColumnQuals["identity_handle"].GetStringValue()
 
 	if handle == "" {
-		err = listActorWorkspaces(ctx, d, h)
+		err = listActorWorkspaces(ctx, d, h, svc)
 	} else if handle == user.Handle {
-		err = listUserWorkspaces(ctx, d, h, handle)
+		err = listUserWorkspaces(ctx, d, h, handle, svc)
 	} else {
-		err = listOrgWorkspaces(ctx, d, h, handle)
+		err = listOrgWorkspaces(ctx, d, h, handle, svc)
 	}
 
 	if err != nil {
@@ -121,159 +131,145 @@ func listWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateD
 	return nil, nil
 }
 
-func listUserWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string) error {
-	// Create Session
-	svc, err := connect(ctx, d)
-	if err != nil {
-		plugin.Logger(ctx).Error("listUserWorkspaces", "connection_error", err)
-		return err
-	}
+func listUserWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string, svc *openapi.APIClient) error {
+	var err error
 
 	// execute list call
 	pagesLeft := true
+
 	var resp openapi.TypesListWorkspacesResponse
-	var httpResp *http.Response
+	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
-		b, err := retry.NewFibonacci(100 * time.Millisecond)
 		if resp.NextToken != nil {
-			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.UserWorkspacesApi.ListUserWorkspaces(context.Background(), handle).NextToken(*resp.NextToken).Execute()
-				// 429 too many request
-				if httpResp.StatusCode == 429 {
-					return retry.RetryableError(err)
-				}
-				return nil
-			})
+			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+				resp, _, err = svc.UserWorkspaces.List(context.Background(), handle).NextToken(*resp.NextToken).Execute()
+				return resp, err
+			}
 		} else {
-			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.UserWorkspacesApi.ListUserWorkspaces(context.Background(), handle).Execute()
-				// 429 too many request
-				if httpResp.StatusCode == 429 {
-					return retry.RetryableError(err)
-				}
-				return nil
-			})
+			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+				resp, _, err = svc.UserWorkspaces.List(context.Background(), handle).Execute()
+				return resp, err
+			}
 		}
+
+		response, err := plugin.RetryHydrate(ctx, d, h, listDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
 		if err != nil {
 			plugin.Logger(ctx).Error("listUserWorkspaces", "list", err)
 			return err
 		}
 
-		if resp.HasItems() {
-			for _, workspace := range *resp.Items {
+		result := response.(openapi.TypesListWorkspacesResponse)
+
+		if result.HasItems() {
+			for _, workspace := range *result.Items {
 				d.StreamListItem(ctx, workspace)
 			}
 		}
-		if resp.NextToken == nil {
+		if result.NextToken == nil {
 			pagesLeft = false
+		} else {
+			resp.NextToken = result.NextToken
 		}
 	}
 
 	return nil
 }
 
-func listOrgWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string) error {
-	// Create Session
-	svc, err := connect(ctx, d)
-	if err != nil {
-		plugin.Logger(ctx).Error("listOrgWorkspaces", "connection_error", err)
-		return err
-	}
+func listOrgWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string, svc *openapi.APIClient) error {
+	var err error
 
 	// execute list call
 	pagesLeft := true
+
 	var resp openapi.TypesListWorkspacesResponse
-	var httpResp *http.Response
+	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
-		b, err := retry.NewFibonacci(100 * time.Millisecond)
 		if resp.NextToken != nil {
-			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.OrgWorkspacesApi.ListOrgWorkspaces(context.Background(), handle).NextToken(*resp.NextToken).Execute()
-				// 429 too many request
-				if httpResp.StatusCode == 429 {
-					return retry.RetryableError(err)
-				}
-				return nil
-			})
+			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+				resp, _, err = svc.OrgWorkspaces.List(context.Background(), handle).NextToken(*resp.NextToken).Execute()
+				return resp, err
+			}
 		} else {
-			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.OrgWorkspacesApi.ListOrgWorkspaces(context.Background(), handle).Execute()
-				// 429 too many request
-				if httpResp.StatusCode == 429 {
-					return retry.RetryableError(err)
-				}
-				return nil
-			})
+			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+				resp, _, err = svc.OrgWorkspaces.List(context.Background(), handle).Execute()
+				return resp, err
+			}
 		}
+
+		response, err := plugin.RetryHydrate(ctx, d, h, listDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
 		if err != nil {
 			plugin.Logger(ctx).Error("listOrgWorkspaces", "list", err)
 			return err
 		}
-		if resp.HasItems() {
-			for _, workspace := range *resp.Items {
+
+		result := response.(openapi.TypesListWorkspacesResponse)
+
+		if result.HasItems() {
+			for _, workspace := range *result.Items {
 				d.StreamListItem(ctx, workspace)
 			}
 		}
-		if resp.NextToken == nil {
+		if result.NextToken == nil {
 			pagesLeft = false
+		} else {
+			resp.NextToken = result.NextToken
 		}
 	}
+
 	return nil
 }
 
-func listActorWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) error {
-	// Create Session
-	svc, err := connect(ctx, d)
-	if err != nil {
-		plugin.Logger(ctx).Error("listActorWorkspaces", "connection_error", err)
-		return err
-	}
+func listActorWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, svc *openapi.APIClient) error {
+	var err error
 
 	// execute list call
 	pagesLeft := true
+
 	var resp openapi.TypesListWorkspacesResponse
-	var httpResp *http.Response
+	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
+
 	for pagesLeft {
-		b, err := retry.NewFibonacci(100 * time.Millisecond)
 		if resp.NextToken != nil {
-			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.UserWorkspacesApi.ListActorWorkspaces(context.Background()).NextToken(*resp.NextToken).Execute()
-				// 429 too many request
-				if httpResp.StatusCode == 429 {
-					return retry.RetryableError(err)
-				}
-				return nil
-			})
+			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+				resp, _, err = svc.Actors.ListWorkspaces(context.Background()).NextToken(*resp.NextToken).Execute()
+				return resp, err
+			}
 		} else {
-			err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-				resp, httpResp, err = svc.UserWorkspacesApi.ListActorWorkspaces(context.Background()).Execute()
-				// 429 too many request
-				if httpResp.StatusCode == 429 {
-					return retry.RetryableError(err)
-				}
-				return nil
-			})
+			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+				resp, _, err = svc.Actors.ListWorkspaces(context.Background()).Execute()
+				return resp, err
+			}
 		}
+
+		response, err := plugin.RetryHydrate(ctx, d, h, listDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
 		if err != nil {
 			plugin.Logger(ctx).Error("listActorWorkspaces", "list", err)
 			return err
 		}
-		if resp.HasItems() {
-			for _, workspace := range *resp.Items {
+
+		result := response.(openapi.TypesListWorkspacesResponse)
+
+		if result.HasItems() {
+			for _, workspace := range *result.Items {
 				d.StreamListItem(ctx, workspace)
 			}
 		}
-		if resp.NextToken == nil {
+		if result.NextToken == nil {
 			pagesLeft = false
+		} else {
+			resp.NextToken = result.NextToken
 		}
 	}
+
 	return nil
 }
+
+//// HYDRATE FUNCTIONS
 
 func getWorkspace(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	identityHandle := d.KeyColumnQuals["identity_handle"].GetStringValue()
@@ -283,15 +279,23 @@ func getWorkspace(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDat
 	if identityHandle == "" || handle == "" {
 		return nil, nil
 	}
+
+	// Create Session
+	svc, err := connect(ctx, d)
+	if err != nil {
+		plugin.Logger(ctx).Error("getWorkspace", "connection_error", err)
+		return nil, err
+	}
+
 	getUserIdentityCached := plugin.HydrateFunc(getUserIdentity).WithCache()
 	commonData, err := getUserIdentityCached(ctx, d, h)
 	user := commonData.(openapi.TypesUser)
 	var resp interface{}
 
 	if identityHandle == user.Handle {
-		resp, err = getUserWorkspace(ctx, d, h, identityHandle, handle)
+		resp, err = getUserWorkspace(ctx, d, h, identityHandle, handle, svc)
 	} else {
-		resp, err = getOrgWorkspace(ctx, d, h, identityHandle, handle)
+		resp, err = getOrgWorkspace(ctx, d, h, identityHandle, handle, svc)
 	}
 
 	if err != nil {
@@ -306,73 +310,50 @@ func getWorkspace(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDat
 	return resp.(openapi.TypesWorkspace), nil
 }
 
-func getOrgWorkspace(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, identityHandle string, handle string) (interface{}, error) {
-	// Create Session
-	svc, err := connect(ctx, d)
-	if err != nil {
-		plugin.Logger(ctx).Error("getOrgWorkspace", "connection_error", err)
-		return nil, err
-	}
+func getOrgWorkspace(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, identityHandle string, handle string, svc *openapi.APIClient) (interface{}, error) {
+	var err error
 
 	// execute get call
 	var resp openapi.TypesWorkspace
-	var httpResp *http.Response
 
-	b, err := retry.NewFibonacci(100 * time.Millisecond)
-	err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-		resp, httpResp, err = svc.OrgWorkspacesApi.GetOrgWorkspace(context.Background(), identityHandle, handle).Execute()
-		// 429 too many request
-		if httpResp.StatusCode == 429 {
-			return retry.RetryableError(err)
-		}
-		return nil
-	})
+	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+		resp, _, err = svc.OrgWorkspaces.Get(context.Background(), identityHandle, handle).Execute()
+		return resp, err
+	}
+
+	response, err := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
+
+	workspace := response.(openapi.TypesWorkspace)
 
 	if err != nil {
 		plugin.Logger(ctx).Error("getOrgWorkspace", "get", err)
 		return nil, err
 	}
 
-	// 404 Not Found
-	if httpResp.StatusCode == 404 {
-		return nil, nil
-	}
-
-	return resp, nil
+	return workspace, nil
 }
 
-func getUserWorkspace(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, identityHandle string, handle string) (interface{}, error) {
-	// Create Session
-	svc, err := connect(ctx, d)
-	if err != nil {
-		plugin.Logger(ctx).Error("getUserWorkspace", "connection_error", err)
-		return nil, err
-	}
+func getUserWorkspace(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, identityHandle string, handle string, svc *openapi.APIClient) (interface{}, error) {
+	var err error
 
 	// execute get call
 	var resp openapi.TypesWorkspace
-	var httpResp *http.Response
 
-	b, err := retry.NewFibonacci(100 * time.Millisecond)
-	err = retry.Do(ctx, retry.WithMaxRetries(10, b), func(ctx context.Context) error {
-		resp, httpResp, err = svc.UserWorkspacesApi.GetUserWorkspace(context.Background(), identityHandle, handle).Execute()
-		// 429 too many request
-		if httpResp.StatusCode == 429 {
-			return retry.RetryableError(err)
-		}
-		return nil
-	})
+	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+		resp, _, err = svc.UserWorkspaces.Get(context.Background(), identityHandle, handle).Execute()
+		return resp, err
+	}
+
+	response, err := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
+
+	workspace := response.(openapi.TypesWorkspace)
+
 	if err != nil {
-		plugin.Logger(ctx).Error("getUserWorkspace", "get", err)
+		plugin.Logger(ctx).Error("getOrgWorkspace", "get", err)
 		return nil, err
 	}
 
-	// 404 Not Found
-	if httpResp.StatusCode == 404 {
-		return nil, nil
-	}
-
-	return resp, nil
+	return workspace, nil
 }
 
 func getWorkspaceIdentityHandle(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
