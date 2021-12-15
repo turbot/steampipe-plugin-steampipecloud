@@ -16,7 +16,7 @@ import (
 func tableSteampipeCloudConnection(_ context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "steampipecloud_connection",
-		Description: "SteampipeCloud Connection",
+		Description: "Connections represent a set of tables for a single data source.",
 		List: &plugin.ListConfig{
 			Hydrate: listConnections,
 			KeyColumns: []*plugin.KeyColumn{
@@ -60,7 +60,7 @@ func tableSteampipeCloudConnection(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:        "identity_type",
-				Description: "The type of identity i.e. 'user' or 'org'.",
+				Description: "The type of identity, which can be 'user' or 'org'.",
 				Type:        proto.ColumnType_STRING,
 				Transform:   transform.FromField("Identity.Type"),
 			},
@@ -81,13 +81,13 @@ func tableSteampipeCloudConnection(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:        "version_id",
-				Description: "The current version id for the connection.",
+				Description: "The version ID for the connection.",
 				Type:        proto.ColumnType_INT,
 				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "updated_at",
-				Description: "The connection updated time.",
+				Description: "The connection's updated time.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
@@ -97,7 +97,7 @@ func tableSteampipeCloudConnection(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:        "identity",
-				Description: "The additional information about the identity.",
+				Description: "Information about the identity.",
 				Type:        proto.ColumnType_JSON,
 			},
 		},

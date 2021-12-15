@@ -15,7 +15,7 @@ import (
 func tableSteampipeCloudUser(_ context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "steampipecloud_user",
-		Description: "SteampipeCloud User",
+		Description: "Users can manage connections, organizations, and workspaces.",
 		List: &plugin.ListConfig{
 			Hydrate: getUser,
 		},
@@ -43,12 +43,12 @@ func tableSteampipeCloudUser(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:        "url",
-				Description: "The url of the user.",
+				Description: "The URL of the user.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "avatar_url",
-				Description: "The avatar url of the user.",
+				Description: "The avatar URL of the user.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
@@ -58,7 +58,7 @@ func tableSteampipeCloudUser(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:        "email",
-				Description: "The email id of the user.",
+				Description: "The email address of the user.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
@@ -68,13 +68,13 @@ func tableSteampipeCloudUser(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:        "version_id",
-				Description: "The current version id of the user.",
+				Description: "The version ID of the user.",
 				Type:        proto.ColumnType_INT,
 				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "updated_at",
-				Description: "The last updated time of the user.",
+				Description: "The user's last updated time.",
 				Type:        proto.ColumnType_STRING,
 			},
 		},

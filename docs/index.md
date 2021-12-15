@@ -24,13 +24,13 @@ select
   email,
   status
 from
-  steampipecloud_org_member
+  steampipecloud_organization_member
 where
   status = 'pending'
 ```
 
 ```
-> select user_handle, email, status from steampipecloud_org_member
+> select user_handle, email, status from steampipecloud_organization_member where status = 'pending'
 +-------------+------------------+----------+
 | user_handle | email            | status   |
 +-------------+------------------+----------+
@@ -61,8 +61,9 @@ Installing the latest Steampipe Cloud plugin will create a config file (`~/.stea
 connection "steampipecloud" {
   plugin = "steampipecloud"
 
-  # Token for your Steampipe Cloud user
-  token = "YOUR_STEAMPIPECLOUD_ACCESS_TOKEN"
+  # Steampipe Cloud API token. If `token` is not specified, it will be loaded
+  # from the `STEAMPIPE_CLOUD_TOKEN` environment variable.
+  # token = "spt_thisisnotarealtoken_123"
 }
 ```
 

@@ -1,10 +1,10 @@
 # Table: steampipecloud_workspace_connection
 
-This table will show the associations between workspaces and connections.
+Workspace connections are the associations between workspaces and connections.
 
 ## Examples
 
-### List workspace connections
+### Basic info
 
 ```sql
 select
@@ -25,12 +25,12 @@ select
   workspace_id,
   identity_id
 from
-  steampipecloud_workspace_connection 
+  steampipecloud_workspace_connection
 where
   identity_id like 'u%';
 ```
 
-### List org workspace connections
+### List organization workspace connections
 
 ```sql
 select
