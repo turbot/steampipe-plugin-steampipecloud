@@ -42,6 +42,11 @@ func tableSteampipeCloudConnection(_ context.Context) *plugin.Table {
 				Transform:   transform.FromCamel(),
 			},
 			{
+				Name:        "handle",
+				Description: "The handle name for the connection.",
+				Type:        proto.ColumnType_STRING,
+			},
+			{
 				Name:        "identity_id",
 				Description: "The unique identifier for an identity where the connection has been created.",
 				Type:        proto.ColumnType_STRING,
@@ -58,11 +63,6 @@ func tableSteampipeCloudConnection(_ context.Context) *plugin.Table {
 				Description: "The type of identity i.e. 'user' or 'org'.",
 				Type:        proto.ColumnType_STRING,
 				Transform:   transform.FromField("Identity.Type"),
-			},
-			{
-				Name:        "handle",
-				Description: "The handle name for the connection.",
-				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "plugin",
