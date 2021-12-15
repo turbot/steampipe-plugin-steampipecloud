@@ -77,23 +77,37 @@ func listTokens(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData)
 	}
 	getUserIdentityCached := plugin.HydrateFunc(getUserIdentity).WithCache()
 	commonData, err := getUserIdentityCached(ctx, d, h)
-	user := commonData.(openapi.TypesUser)
+	user := commonData.(openapi.User)
+
+	// If the requested number of items is less than the paging max limit
+	// set the limit to that instead
+	maxResults := int32(100)
+	limit := d.QueryContext.Limit
+	if d.QueryContext.Limit != nil {
+		if *limit < int64(maxResults) {
+			if *limit < 1 {
+				maxResults = int32(1)
+			} else {
+				maxResults = int32(*limit)
+			}
+		}
+	}
 
 	// execute list call
 	pagesLeft := true
 
-	var resp openapi.TypesListTokensResponse
+	var resp openapi.ListTokensResponse
 	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserTokens.List(context.Background(), user.Handle).NextToken(*resp.NextToken).Execute()
+				resp, _, err = svc.UserTokens.List(context.Background(), user.Handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserTokens.List(context.Background(), user.Handle).Execute()
+				resp, _, err = svc.UserTokens.List(context.Background(), user.Handle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -105,11 +119,16 @@ func listTokens(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData)
 			return nil, err
 		}
 
-		result := response.(openapi.TypesListTokensResponse)
+		result := response.(openapi.ListTokensResponse)
 
 		if result.HasItems() {
 			for _, token := range *result.Items {
 				d.StreamListItem(ctx, token)
+
+				// Context can be cancelled due to manual cancellation or the limit has been hit
+				if d.QueryStatus.RowsRemaining(ctx) == 0 {
+					return nil, nil
+				}
 			}
 		}
 		if result.NextToken == nil {
@@ -138,9 +157,9 @@ func getToken(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (
 
 	getUserIdentityCached := plugin.HydrateFunc(getUserIdentity).WithCache()
 	commonData, err := getUserIdentityCached(ctx, d, h)
-	user := commonData.(openapi.TypesUser)
+	user := commonData.(openapi.User)
 
-	var resp openapi.TypesToken
+	var resp openapi.Token
 
 	// execute get call
 
@@ -151,7 +170,7 @@ func getToken(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (
 
 	response, err := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
-	token := response.(openapi.TypesToken)
+	token := response.(openapi.Token)
 
 	if err != nil {
 		plugin.Logger(ctx).Error("getToken", "get", err)

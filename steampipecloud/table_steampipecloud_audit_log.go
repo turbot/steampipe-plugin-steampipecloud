@@ -111,14 +111,28 @@ func listAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDa
 
 	getUserIdentityCached := plugin.HydrateFunc(getUserIdentity).WithCache()
 	commonData, err := getUserIdentityCached(ctx, d, h)
-	user := commonData.(openapi.TypesUser)
+	user := commonData.(openapi.User)
 
 	handle := d.KeyColumnQuals["identity_handle"].GetStringValue()
 
+	// If the requested number of items is less than the paging max limit
+	// set the limit to that instead
+	maxResults := int32(100)
+	limit := d.QueryContext.Limit
+	if d.QueryContext.Limit != nil {
+		if *limit < int64(maxResults) {
+			if *limit < 1 {
+				maxResults = int32(1)
+			} else {
+				maxResults = int32(*limit)
+			}
+		}
+	}
+
 	if handle == user.Handle {
-		err = listUserAuditLogs(ctx, d, h, handle, svc)
+		err = listUserAuditLogs(ctx, d, h, handle, svc, maxResults)
 	} else {
-		err = listOrgAuditLogs(ctx, d, h, handle, svc)
+		err = listOrgAuditLogs(ctx, d, h, handle, svc, maxResults)
 	}
 
 	if err != nil {
@@ -128,23 +142,23 @@ func listAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDa
 	return nil, nil
 }
 
-func listOrgAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string, svc *openapi.APIClient) error {
+func listOrgAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string, svc *openapi.APIClient, maxResults int32) error {
 	var err error
 
 	// execute list call
 	pagesLeft := true
-	var resp openapi.TypesListAuditLogsResponse
+	var resp openapi.ListAuditLogsResponse
 	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.Orgs.ListAuditLogs(context.Background(), handle).NextToken(*resp.NextToken).Execute()
+				resp, _, err = svc.Orgs.ListAuditLogs(context.Background(), handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.Orgs.ListAuditLogs(context.Background(), handle).Execute()
+				resp, _, err = svc.Orgs.ListAuditLogs(context.Background(), handle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -156,11 +170,16 @@ func listOrgAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
 			return err
 		}
 
-		result := response.(openapi.TypesListAuditLogsResponse)
+		result := response.(openapi.ListAuditLogsResponse)
 
 		if result.HasItems() {
 			for _, log := range *result.Items {
 				d.StreamListItem(ctx, log)
+
+				// Context can be cancelled due to manual cancellation or the limit has been hit
+				if d.QueryStatus.RowsRemaining(ctx) == 0 {
+					return nil
+				}
 			}
 		}
 		if result.NextToken == nil {
@@ -173,23 +192,23 @@ func listOrgAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
 	return nil
 }
 
-func listUserAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string, svc *openapi.APIClient) error {
+func listUserAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string, svc *openapi.APIClient, maxResults int32) error {
 	var err error
 
 	// execute list call
 	pagesLeft := true
-	var resp openapi.TypesListAuditLogsResponse
+	var resp openapi.ListAuditLogsResponse
 	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.Users.ListAuditLogs(context.Background(), handle).NextToken(*resp.NextToken).Execute()
+				resp, _, err = svc.Users.ListAuditLogs(context.Background(), handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.Users.ListAuditLogs(context.Background(), handle).Execute()
+				resp, _, err = svc.Users.ListAuditLogs(context.Background(), handle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -201,11 +220,16 @@ func listUserAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 			return err
 		}
 
-		result := response.(openapi.TypesListAuditLogsResponse)
+		result := response.(openapi.ListAuditLogsResponse)
 
 		if result.HasItems() {
 			for _, log := range *result.Items {
 				d.StreamListItem(ctx, log)
+
+				// Context can be cancelled due to manual cancellation or the limit has been hit
+				if d.QueryStatus.RowsRemaining(ctx) == 0 {
+					return nil
+				}
 			}
 		}
 		if resp.NextToken == nil {

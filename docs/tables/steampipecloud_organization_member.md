@@ -1,4 +1,4 @@
-# Table: steampipecloud_member
+# Table: steampipecloud_organization_member
 
  The member of an organization who can collaborate and share workspaces and connections.
 
@@ -13,7 +13,7 @@ select
   user_id,
   status
 from
-  steampipecloud_member;
+  steampipecloud_organization_member;
 ```
 
 ### List pending members
@@ -25,7 +25,7 @@ select
   user_id,
   status
 from
-  steampipecloud_member
+  steampipecloud_organization_member
 where
   status <> 'accepted';
 ```

@@ -27,7 +27,7 @@ select
 from
   steampipecloud_workspace
 where
-  identity_id like 'u%';
+  identity_type = 'user';
 ```
 
 ### List org workspaces
@@ -41,7 +41,7 @@ select
 from
   steampipecloud_workspace
 where
-  identity_id like 'o%';
+  identity_type = 'org';
 ```
 
 ### List workspaces which are not running

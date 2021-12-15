@@ -2,6 +2,7 @@ package steampipecloud
 
 import (
 	"context"
+	"strings"
 
 	openapi "github.com/turbot/steampipe-cloud-sdk-go"
 
@@ -23,6 +24,10 @@ func tableSteampipeCloudConnection(_ context.Context) *plugin.Table {
 					Name:    "identity_handle",
 					Require: plugin.Optional,
 				},
+				{
+					Name:    "identity_id",
+					Require: plugin.Optional,
+				},
 			},
 		},
 		Get: &plugin.GetConfig{
@@ -37,28 +42,27 @@ func tableSteampipeCloudConnection(_ context.Context) *plugin.Table {
 				Transform:   transform.FromCamel(),
 			},
 			{
+				Name:        "handle",
+				Description: "The handle name for the connection.",
+				Type:        proto.ColumnType_STRING,
+			},
+			{
 				Name:        "identity_id",
-				Description: "The unique identifier for an identity where the action has been performed.",
+				Description: "The unique identifier for an identity where the connection has been created.",
 				Type:        proto.ColumnType_STRING,
 				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "identity_handle",
-				Description: "The handle name for an identity where the action has been performed.",
+				Description: "The handle name for an identity where the connection has been created.",
 				Type:        proto.ColumnType_STRING,
-				Hydrate:     getConnectionIdentityHandle,
-				Transform:   transform.FromValue(),
+				Transform:   transform.FromField("Identity.Handle"),
 			},
 			{
 				Name:        "identity_type",
-				Description: "The unique identifier for an identity where the action has been performed.",
+				Description: "The type of identity i.e. 'user' or 'org'.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromField("IdentityId").Transform(setIdentityType),
-			},
-			{
-				Name:        "handle",
-				Description: "The handle name for the connection.",
-				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromField("Identity.Type"),
 			},
 			{
 				Name:        "plugin",
@@ -93,7 +97,7 @@ func tableSteampipeCloudConnection(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:        "identity",
-				Description: "The identity where the action has been performed.",
+				Description: "The additional information about the identity.",
 				Type:        proto.ColumnType_JSON,
 			},
 		},
@@ -112,16 +116,35 @@ func listConnections(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 
 	getUserIdentityCached := plugin.HydrateFunc(getUserIdentity).WithCache()
 	commonData, err := getUserIdentityCached(ctx, d, h)
-	user := commonData.(openapi.TypesUser)
+	user := commonData.(openapi.User)
 
-	handle := d.KeyColumnQuals["identity_handle"].GetStringValue()
+	identityHandle := d.KeyColumnQuals["identity_handle"].GetStringValue()
+	identityId := d.KeyColumnQuals["identity_id"].GetStringValue()
 
-	if handle == "" {
-		err = listActorConnections(ctx, d, h, svc)
-	} else if handle == user.Handle {
-		err = listUserConnections(ctx, d, h, handle, svc)
+	// If the requested number of items is less than the paging max limit
+	// set the limit to that instead
+	maxResults := int32(100)
+	limit := d.QueryContext.Limit
+	if d.QueryContext.Limit != nil {
+		if *limit < int64(maxResults) {
+			if *limit < 1 {
+				maxResults = int32(1)
+			} else {
+				maxResults = int32(*limit)
+			}
+		}
+	}
+
+	if identityHandle == "" && identityId == "" {
+		err = listActorConnections(ctx, d, h, svc, maxResults)
+	} else if identityId != "" && strings.HasPrefix(identityId, "u_") {
+		err = listUserConnections(ctx, d, h, identityId, svc, maxResults)
+	} else if identityId != "" && strings.HasPrefix(identityId, "o_") {
+		err = listOrgConnections(ctx, d, h, identityId, svc, maxResults)
+	} else if identityHandle == user.Handle {
+		err = listUserConnections(ctx, d, h, identityHandle, svc, maxResults)
 	} else {
-		err = listOrgConnections(ctx, d, h, handle, svc)
+		err = listOrgConnections(ctx, d, h, identityHandle, svc, maxResults)
 	}
 
 	if err != nil {
@@ -131,23 +154,23 @@ func listConnections(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 	return nil, nil
 }
 
-func listOrgConnections(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string, svc *openapi.APIClient) error {
+func listOrgConnections(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string, svc *openapi.APIClient, maxResults int32) error {
 	var err error
 
 	// execute list call
 	pagesLeft := true
-	var resp openapi.TypesListConnectionsResponse
+	var resp openapi.ListConnectionsResponse
 	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgConnections.List(context.Background(), handle).NextToken(*resp.NextToken).Execute()
+				resp, _, err = svc.OrgConnections.List(context.Background(), handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgConnections.List(context.Background(), handle).Execute()
+				resp, _, err = svc.OrgConnections.List(context.Background(), handle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -159,10 +182,15 @@ func listOrgConnections(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 			return err
 		}
 
-		result := response.(openapi.TypesListConnectionsResponse)
+		result := response.(openapi.ListConnectionsResponse)
 
 		for _, connection := range *result.Items {
 			d.StreamListItem(ctx, connection)
+
+			// Context can be cancelled due to manual cancellation or the limit has been hit
+			if d.QueryStatus.RowsRemaining(ctx) == 0 {
+				return nil
+			}
 		}
 		if result.NextToken == nil {
 			pagesLeft = false
@@ -174,23 +202,23 @@ func listOrgConnections(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 	return nil
 }
 
-func listUserConnections(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string, svc *openapi.APIClient) error {
+func listUserConnections(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string, svc *openapi.APIClient, maxResults int32) error {
 	var err error
 
 	// execute list call
 	pagesLeft := true
-	var resp openapi.TypesListConnectionsResponse
+	var resp openapi.ListConnectionsResponse
 	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserConnections.List(context.Background(), handle).NextToken(*resp.NextToken).Execute()
+				resp, _, err = svc.UserConnections.List(context.Background(), handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserConnections.List(context.Background(), handle).Execute()
+				resp, _, err = svc.UserConnections.List(context.Background(), handle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -202,10 +230,15 @@ func listUserConnections(ctx context.Context, d *plugin.QueryData, h *plugin.Hyd
 			return err
 		}
 
-		result := response.(openapi.TypesListConnectionsResponse)
+		result := response.(openapi.ListConnectionsResponse)
 
 		for _, connection := range *result.Items {
 			d.StreamListItem(ctx, connection)
+
+			// Context can be cancelled due to manual cancellation or the limit has been hit
+			if d.QueryStatus.RowsRemaining(ctx) == 0 {
+				return nil
+			}
 		}
 		if result.NextToken == nil {
 			pagesLeft = false
@@ -217,24 +250,24 @@ func listUserConnections(ctx context.Context, d *plugin.QueryData, h *plugin.Hyd
 	return nil
 }
 
-func listActorConnections(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, svc *openapi.APIClient) error {
+func listActorConnections(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, svc *openapi.APIClient, maxResults int32) error {
 	var err error
 
 	// execute list call
 	pagesLeft := true
 
-	var resp openapi.TypesListConnectionsResponse
+	var resp openapi.ListConnectionsResponse
 	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.Actors.ListConnections(context.Background()).NextToken(*resp.NextToken).Execute()
+				resp, _, err = svc.Actors.ListConnections(context.Background()).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.Actors.ListConnections(context.Background()).Execute()
+				resp, _, err = svc.Actors.ListConnections(context.Background()).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -246,11 +279,16 @@ func listActorConnections(ctx context.Context, d *plugin.QueryData, h *plugin.Hy
 			return err
 		}
 
-		result := response.(openapi.TypesListConnectionsResponse)
+		result := response.(openapi.ListConnectionsResponse)
 
 		if result.HasItems() {
 			for _, connection := range *result.Items {
 				d.StreamListItem(ctx, connection)
+
+				// Context can be cancelled due to manual cancellation or the limit has been hit
+				if d.QueryStatus.RowsRemaining(ctx) == 0 {
+					return nil
+				}
 			}
 		}
 		if result.NextToken == nil {
@@ -283,7 +321,7 @@ func getConnection(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDa
 
 	getUserIdentityCached := plugin.HydrateFunc(getUserIdentity).WithCache()
 	commonData, err := getUserIdentityCached(ctx, d, h)
-	user := commonData.(openapi.TypesUser)
+	user := commonData.(openapi.User)
 	var resp interface{}
 
 	if identityHandle == user.Handle {
@@ -301,14 +339,14 @@ func getConnection(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDa
 		return nil, nil
 	}
 
-	return resp.(openapi.TypesConnection), nil
+	return resp.(openapi.Connection), nil
 }
 
 func getOrgConnection(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, identityHandle string, handle string, svc *openapi.APIClient) (interface{}, error) {
 	var err error
 
 	// execute get call
-	var resp openapi.TypesConnection
+	var resp openapi.Connection
 
 	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 		resp, _, err = svc.OrgConnections.Get(context.Background(), identityHandle, handle).Execute()
@@ -317,7 +355,7 @@ func getOrgConnection(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
 
 	response, err := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
-	connection := response.(openapi.TypesConnection)
+	connection := response.(openapi.Connection)
 
 	if err != nil {
 		plugin.Logger(ctx).Error("getOrgConnection", "get", err)
@@ -331,7 +369,7 @@ func getUserConnection(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 	var err error
 
 	// execute get call
-	var resp openapi.TypesConnection
+	var resp openapi.Connection
 
 	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 		resp, _, err = svc.UserConnections.Get(context.Background(), identityHandle, handle).Execute()
@@ -340,7 +378,7 @@ func getUserConnection(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 
 	response, err := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
-	connection := response.(openapi.TypesConnection)
+	connection := response.(openapi.Connection)
 
 	if err != nil {
 		plugin.Logger(ctx).Error("getUserConnection", "get", err)
@@ -348,15 +386,4 @@ func getUserConnection(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 	}
 
 	return connection, nil
-}
-
-func getConnectionIdentityHandle(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-	connection := h.Item.(openapi.TypesConnection)
-	handle := d.KeyColumnQuals["identity_handle"].GetStringValue()
-
-	if handle == "" {
-		return connection.Identity.Handle, nil
-	}
-
-	return handle, nil
 }

@@ -2,21 +2,13 @@ package steampipecloud
 
 import (
 	"context"
-	"strings"
 
-	"github.com/turbot/go-kit/types"
 	openapi "github.com/turbot/steampipe-cloud-sdk-go"
 	"github.com/turbot/steampipe-plugin-sdk/plugin"
-	"github.com/turbot/steampipe-plugin-sdk/plugin/transform"
 )
 
 func getUserIdentity(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	cacheKey := "GetUserIdentity"
-
-	// if found in cache, return the result
-	if cachedData, ok := d.ConnectionManager.Cache.Get(cacheKey); ok {
-		return cachedData.(openapi.TypesUser), nil
-	}
 
 	// get the service connection for the service
 	svc, err := connect(ctx, d)
@@ -25,7 +17,12 @@ func getUserIdentity(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 		return nil, err
 	}
 
-	var resp openapi.TypesUser
+	// if found in cache, return the result
+	if cachedData, ok := d.ConnectionManager.Cache.Get(cacheKey); ok {
+		return cachedData.(openapi.User), nil
+	}
+
+	var resp openapi.User
 
 	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 		resp, _, err = svc.Actors.Get(ctx).Execute()
@@ -34,7 +31,7 @@ func getUserIdentity(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 
 	response, err := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
-	user := response.(openapi.TypesUser)
+	user := response.(openapi.User)
 
 	if err != nil {
 		plugin.Logger(ctx).Error("GetUserIdentity", "error", err)
@@ -45,19 +42,4 @@ func getUserIdentity(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 	d.ConnectionManager.Cache.Set(cacheKey, user)
 
 	return user, nil
-}
-
-func setIdentityType(ctx context.Context, d *transform.TransformData) (interface{}, error) {
-	plugin.Logger(ctx).Trace("setIdentityType", "Value", d.Value)
-	if d.Value == nil {
-		return nil, nil
-	}
-	id := types.SafeString(d.Value)
-	if strings.Contains(id, "o_") {
-		return "org", nil
-	} else if strings.Contains(id, "u_") {
-		return "user", nil
-	} else {
-		return nil, nil
-	}
 }
