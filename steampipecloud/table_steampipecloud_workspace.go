@@ -16,7 +16,7 @@ import (
 func tableSteampipeCloudWorkspace(_ context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "steampipecloud_workspace",
-		Description: "SteampipeCloud Workspace",
+		Description: "Workspaces provide a bounded context for managing and securing Steampipe resources.",
 		List: &plugin.ListConfig{
 			Hydrate: listWorkspaces,
 			KeyColumns: []*plugin.KeyColumn{

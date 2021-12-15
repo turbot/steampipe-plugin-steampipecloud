@@ -15,7 +15,7 @@ import (
 func tableSteampipeCloudUser(_ context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "steampipecloud_user",
-		Description: "SteampipeCloud User",
+		Description: "Users can manage connections, organizations, and workspaces.",
 		List: &plugin.ListConfig{
 			Hydrate: getUser,
 		},

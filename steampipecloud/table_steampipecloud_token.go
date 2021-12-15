@@ -15,7 +15,7 @@ import (
 func tableSteampipeCloudToken(_ context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "steampipecloud_token",
-		Description: "SteampipeCloud Token",
+		Description: "Tokens can be used to access the Steampipe Cloud API or to connect to Steampipe Cloud workspaces from the Steampipe CLI.",
 		List: &plugin.ListConfig{
 			Hydrate: listTokens,
 		},

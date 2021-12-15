@@ -16,7 +16,7 @@ import (
 func tableSteampipeCloudOrganizationMember(_ context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "steampipecloud_organization_member",
-		Description: "SteampipeCloud Organization Member",
+		Description: "Organization members can collaborate and share workspaces and connections.",
 		List: &plugin.ListConfig{
 			ParentHydrate: listOrganizations,
 			Hydrate:       listOrganizationMembers,

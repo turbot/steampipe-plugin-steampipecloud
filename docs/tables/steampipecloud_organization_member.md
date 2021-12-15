@@ -1,6 +1,6 @@
 # Table: steampipecloud_organization_member
 
- The member of an organization who can collaborate and share workspaces and connections.
+Organization members can collaborate and share workspaces and connections.
 
 ## Examples
 
@@ -27,5 +27,5 @@ select
 from
   steampipecloud_organization_member
 where
-  status <> 'accepted';
+  status = 'pending';
 ```

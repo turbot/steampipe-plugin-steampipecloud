@@ -1,7 +1,6 @@
 # Table: steampipecloud_user
 
-A steampipe cloud user is an entity that interacts with the application.
-
+Users can manage connections, organizations, and workspaces.
 
 ## Examples
 

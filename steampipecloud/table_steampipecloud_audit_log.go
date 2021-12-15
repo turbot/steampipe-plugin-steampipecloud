@@ -15,7 +15,7 @@ import (
 func tableSteampipeCloudAuditLog(_ context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "steampipecloud_audit_log",
-		Description: "SteampipeCloud Audit Log",
+		Description: "Audit logs record a series of events performed on an identity.",
 		List: &plugin.ListConfig{
 			Hydrate: listAuditLogs,
 			KeyColumns: []*plugin.KeyColumn{

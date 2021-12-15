@@ -1,7 +1,6 @@
 # Table: steampipecloud_token
 
-A steampipe cloud token which can be used to sign programmatic request and perform action on steampipe cloud.
-
+API tokens can be used to access the Steampipe Cloud API or to connect to Steampipe Cloud workspaces from the Steampipe CLI.
 
 ## Examples
 
@@ -28,5 +27,5 @@ select
 from
   steampipecloud_token
 where
-  status <> 'active';
+  status = 'inactive';
 ```

@@ -16,7 +16,7 @@ import (
 func tableSteampipeCloudConnection(_ context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "steampipecloud_connection",
-		Description: "SteampipeCloud Connection",
+		Description: "Connections represent a set of tables for a single data source.",
 		List: &plugin.ListConfig{
 			Hydrate: listConnections,
 			KeyColumns: []*plugin.KeyColumn{

@@ -15,7 +15,7 @@ import (
 func tableSteampipeCloudWorkspaceConnection(_ context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "steampipecloud_workspace_connection",
-		Description: "SteampipeCloud Workspace Connection",
+		Description: "Workspace connections are the associations between workspaces and connections.",
 		List: &plugin.ListConfig{
 			ParentHydrate: listWorkspaces,
 			Hydrate:       listWorkspaceConnections,
