@@ -80,24 +80,24 @@ func tableSteampipeCloudWorkspace(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:        "identity_type",
-				Description: "The unique identifier for an identity where the workspace has been created.",
+				Description: "The type of identity, which can be 'user' or 'org'.",
 				Type:        proto.ColumnType_STRING,
 				Transform:   transform.FromField("Identity.Type"),
 			},
 			{
 				Name:        "version_id",
-				Description: "The current version id of the workspace.",
+				Description: "The version ID of the workspace.",
 				Type:        proto.ColumnType_INT,
 				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "updated_at",
-				Description: "The last updated time of the workspace.",
+				Description: "The workspace's last updated time.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
 				Name:        "identity",
-				Description: "The additional information about the identity.",
+				Description: "Information about the identity.",
 				Type:        proto.ColumnType_JSON,
 			},
 		},

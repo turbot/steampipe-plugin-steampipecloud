@@ -37,7 +37,7 @@ func tableSteampipeCloudToken(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:        "user_id",
-				Description: "The user id.",
+				Description: "The user ID.",
 				Type:        proto.ColumnType_STRING,
 				Transform:   transform.FromCamel(),
 			},
@@ -48,18 +48,18 @@ func tableSteampipeCloudToken(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:        "created_at",
-				Description: "The token creation time.",
+				Description: "The token's creation time.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
 				Name:        "version_id",
-				Description: "The token current version id.",
+				Description: "The version ID of the token.",
 				Type:        proto.ColumnType_INT,
 				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "updated_at",
-				Description: "The last updated time of the token.",
+				Description: "The token's last updated time.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 		},

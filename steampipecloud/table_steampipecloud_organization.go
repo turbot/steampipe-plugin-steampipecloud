@@ -38,28 +38,28 @@ func tableSteampipeCloudOrganization(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:        "avatar_url",
-				Description: "The avatar url of the organization.",
+				Description: "The avatar URL of the organization.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "url",
-				Description: "The url of the organization.",
+				Description: "The URL of the organization.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "created_at",
-				Description: "The organization creation time.",
+				Description: "The organization's creation time.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "version_id",
-				Description: "The organization current version id.",
+				Description: "The organization version ID.",
 				Type:        proto.ColumnType_INT,
 				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "updated_at",
-				Description: "The organization last update time.",
+				Description: "The organization's last updated time.",
 				Type:        proto.ColumnType_STRING,
 			},
 		},

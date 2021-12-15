@@ -23,7 +23,7 @@ func tableSteampipeCloudWorkspaceConnection(_ context.Context) *plugin.Table {
 		Columns: []*plugin.Column{
 			{
 				Name:        "id",
-				Description: "The unique identifier for the workspace connection association.",
+				Description: "The unique identifier for the association.",
 				Type:        proto.ColumnType_STRING,
 				Transform:   transform.FromCamel(),
 			},
@@ -47,28 +47,28 @@ func tableSteampipeCloudWorkspaceConnection(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:        "created_at",
-				Description: "The creation time of the workspace connection association.",
+				Description: "The creation time of the association.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "version_id",
-				Description: "The creation version id of the workspace connection association.",
+				Description: "The version ID of the association.",
 				Type:        proto.ColumnType_INT,
 				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "updated_at",
-				Description: "The last updated time of the workspace connection association.",
+				Description: "The association's last updated time.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "connection",
-				Description: "The connection details of the workspace connection association.",
+				Description: "The connection details of the association.",
 				Type:        proto.ColumnType_JSON,
 			},
 			{
 				Name:        "workspace",
-				Description: "The workspace details of the workspace connection association.",
+				Description: "The workspace details of the association.",
 				Type:        proto.ColumnType_JSON,
 			},
 		},

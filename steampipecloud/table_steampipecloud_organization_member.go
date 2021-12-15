@@ -58,7 +58,7 @@ func tableSteampipeCloudOrganizationMember(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:        "email",
-				Description: "The email id for the member.",
+				Description: "The email address for the member.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
@@ -68,17 +68,17 @@ func tableSteampipeCloudOrganizationMember(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:        "created_at",
-				Description: "The member creation time.",
+				Description: "The member's creation time.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
 				Name:        "updated_at",
-				Description: "The last time member was updated.",
+				Description: "The member's last update time.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
 				Name:        "version_id",
-				Description: "The current version id for the member.",
+				Description: "The current version ID for the member.",
 				Type:        proto.ColumnType_INT,
 				Transform:   transform.FromCamel(),
 			},
