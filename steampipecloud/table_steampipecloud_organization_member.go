@@ -58,7 +58,7 @@ func tableSteampipeCloudOrganizationMember(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:        "email",
-				Description: "The email id for the user.",
+				Description: "The email id for the member.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
@@ -94,22 +94,36 @@ func tableSteampipeCloudOrganizationMember(_ context.Context) *plugin.Table {
 //// LIST FUNCTION
 
 func listOrganizationMembers(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-	org := h.Item.(*openapi.TypesOrg)
+	org := h.Item.(*openapi.Org)
 
 	status := d.KeyColumnQuals["status"].GetStringValue()
 
+	// If the requested number of items is less than the paging max limit
+	// set the limit to that instead
+	maxResults := int32(100)
+	limit := d.QueryContext.Limit
+	if d.QueryContext.Limit != nil {
+		if *limit < int64(maxResults) {
+			if *limit < 1 {
+				maxResults = int32(1)
+			} else {
+				maxResults = int32(*limit)
+			}
+		}
+	}
+
 	var err error
 	if status == "" {
-		err = listInvitedOrgMembers(ctx, d, h, org.Handle)
+		err = listInvitedOrgMembers(ctx, d, h, org.Handle, maxResults)
 		if err != nil {
 			plugin.Logger(ctx).Error("listInvitedOrgMembers", "error", err)
 			return nil, err
 		}
-		err = listAcceptedOrgMembers(ctx, d, h, org.Handle)
+		err = listAcceptedOrgMembers(ctx, d, h, org.Handle, maxResults)
 	} else if status == "invited" {
-		err = listInvitedOrgMembers(ctx, d, h, org.Handle)
+		err = listInvitedOrgMembers(ctx, d, h, org.Handle, maxResults)
 	} else if status == "accepted" {
-		err = listAcceptedOrgMembers(ctx, d, h, org.Handle)
+		err = listAcceptedOrgMembers(ctx, d, h, org.Handle, maxResults)
 	} else {
 		return nil, errors.New("possible values are: invited and accepted")
 	}
@@ -121,7 +135,7 @@ func listOrganizationMembers(ctx context.Context, d *plugin.QueryData, h *plugin
 	return nil, nil
 }
 
-func listAcceptedOrgMembers(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string) error {
+func listAcceptedOrgMembers(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string, maxResults int32) error {
 	// Create Session
 	svc, err := connect(ctx, d)
 	if err != nil {
@@ -130,18 +144,18 @@ func listAcceptedOrgMembers(ctx context.Context, d *plugin.QueryData, h *plugin.
 	}
 
 	pagesLeft := true
-	var resp openapi.TypesListOrgUsersResponse
+	var resp openapi.ListOrgUsersResponse
 	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgMembers.ListAccepted(context.Background(), handle).NextToken(*resp.NextToken).Execute()
+				resp, _, err = svc.OrgMembers.ListAccepted(context.Background(), handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgMembers.ListAccepted(context.Background(), handle).Execute()
+				resp, _, err = svc.OrgMembers.ListAccepted(context.Background(), handle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -153,11 +167,16 @@ func listAcceptedOrgMembers(ctx context.Context, d *plugin.QueryData, h *plugin.
 			return err
 		}
 
-		result := response.(openapi.TypesListOrgUsersResponse)
+		result := response.(openapi.ListOrgUsersResponse)
 
 		if result.HasItems() {
-			for _, log := range *result.Items {
-				d.StreamListItem(ctx, log)
+			for _, member := range *result.Items {
+				d.StreamListItem(ctx, member)
+
+				// Context can be cancelled due to manual cancellation or the limit has been hit
+				if d.QueryStatus.RowsRemaining(ctx) == 0 {
+					return nil
+				}
 			}
 		}
 		if result.NextToken == nil {
@@ -170,7 +189,7 @@ func listAcceptedOrgMembers(ctx context.Context, d *plugin.QueryData, h *plugin.
 	return nil
 }
 
-func listInvitedOrgMembers(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string) error {
+func listInvitedOrgMembers(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string, maxResults int32) error {
 	// Create Session
 	svc, err := connect(ctx, d)
 	if err != nil {
@@ -179,18 +198,18 @@ func listInvitedOrgMembers(ctx context.Context, d *plugin.QueryData, h *plugin.H
 	}
 
 	pagesLeft := true
-	var resp openapi.TypesListOrgUsersResponse
+	var resp openapi.ListOrgUsersResponse
 	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgMembers.ListInvited(context.Background(), handle).NextToken(*resp.NextToken).Execute()
+				resp, _, err = svc.OrgMembers.ListInvited(context.Background(), handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgMembers.ListInvited(context.Background(), handle).Execute()
+				resp, _, err = svc.OrgMembers.ListInvited(context.Background(), handle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -202,11 +221,16 @@ func listInvitedOrgMembers(ctx context.Context, d *plugin.QueryData, h *plugin.H
 			return err
 		}
 
-		result := response.(openapi.TypesListOrgUsersResponse)
+		result := response.(openapi.ListOrgUsersResponse)
 
 		if result.HasItems() {
-			for _, log := range *result.Items {
-				d.StreamListItem(ctx, log)
+			for _, member := range *result.Items {
+				d.StreamListItem(ctx, member)
+
+				// Context can be cancelled due to manual cancellation or the limit has been hit
+				if d.QueryStatus.RowsRemaining(ctx) == 0 {
+					return nil
+				}
 			}
 		}
 		if result.NextToken == nil {

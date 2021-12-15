@@ -78,23 +78,37 @@ func listOrganizations(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 
 	getUserIdentityCached := plugin.HydrateFunc(getUserIdentity).WithCache()
 	commonData, err := getUserIdentityCached(ctx, d, h)
-	user := commonData.(openapi.TypesUser)
+	user := commonData.(openapi.User)
+
+	// If the requested number of items is less than the paging max limit
+	// set the limit to that instead
+	maxResults := int32(100)
+	limit := d.QueryContext.Limit
+	if d.QueryContext.Limit != nil {
+		if *limit < int64(maxResults) {
+			if *limit < 1 {
+				maxResults = int32(1)
+			} else {
+				maxResults = int32(*limit)
+			}
+		}
+	}
 
 	// execute list call
 	pagesLeft := true
 
-	var resp openapi.TypesListUserOrgsResponse
+	var resp openapi.ListUserOrgsResponse
 	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.Users.ListOrgs(context.Background(), user.Handle).NextToken(*resp.NextToken).Execute()
+				resp, _, err = svc.Users.ListOrgs(context.Background(), user.Handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.Users.ListOrgs(context.Background(), user.Handle).Execute()
+				resp, _, err = svc.Users.ListOrgs(context.Background(), user.Handle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -106,11 +120,16 @@ func listOrganizations(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 			return nil, err
 		}
 
-		result := response.(openapi.TypesListUserOrgsResponse)
+		result := response.(openapi.ListUserOrgsResponse)
 
 		if result.HasItems() {
 			for _, org := range *result.Items {
 				d.StreamListItem(ctx, org.Org)
+
+				// Context can be cancelled due to manual cancellation or the limit has been hit
+				if d.QueryStatus.RowsRemaining(ctx) == 0 {
+					return nil, nil
+				}
 			}
 		}
 

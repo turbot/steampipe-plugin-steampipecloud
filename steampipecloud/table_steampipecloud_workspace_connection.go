@@ -78,7 +78,7 @@ func tableSteampipeCloudWorkspaceConnection(_ context.Context) *plugin.Table {
 //// LIST FUNCTION
 
 func listWorkspaceConnections(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-	workspace := h.Item.(openapi.TypesWorkspace)
+	workspace := h.Item.(openapi.Workspace)
 
 	// Create Session
 	svc, err := connect(ctx, d)
@@ -89,12 +89,26 @@ func listWorkspaceConnections(ctx context.Context, d *plugin.QueryData, h *plugi
 
 	getUserIdentityCached := plugin.HydrateFunc(getUserIdentity).WithCache()
 	commonData, err := getUserIdentityCached(ctx, d, h)
-	user := commonData.(openapi.TypesUser)
+	user := commonData.(openapi.User)
+
+	// If the requested number of items is less than the paging max limit
+	// set the limit to that instead
+	maxResults := int32(100)
+	limit := d.QueryContext.Limit
+	if d.QueryContext.Limit != nil {
+		if *limit < int64(maxResults) {
+			if *limit < 1 {
+				maxResults = int32(1)
+			} else {
+				maxResults = int32(*limit)
+			}
+		}
+	}
 
 	if workspace.Identity.Handle == user.Handle {
-		err = listUserWorkspaceConnectionAssociations(ctx, d, h, user.Handle, workspace.Handle, svc)
+		err = listUserWorkspaceConnectionAssociations(ctx, d, h, user.Handle, workspace.Handle, svc, maxResults)
 	} else {
-		err = listOrgWorkspaceConnectionAssociations(ctx, d, h, workspace.Identity.Handle, workspace.Handle, svc)
+		err = listOrgWorkspaceConnectionAssociations(ctx, d, h, workspace.Identity.Handle, workspace.Handle, svc, maxResults)
 	}
 
 	if err != nil {
@@ -104,23 +118,23 @@ func listWorkspaceConnections(ctx context.Context, d *plugin.QueryData, h *plugi
 	return nil, nil
 }
 
-func listUserWorkspaceConnectionAssociations(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, userHandle string, workspaceHandle string, svc *openapi.APIClient) error {
+func listUserWorkspaceConnectionAssociations(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, userHandle string, workspaceHandle string, svc *openapi.APIClient, maxResults int32) error {
 	var err error
 
 	// execute list call
 	pagesLeft := true
-	var resp openapi.TypesListWorkspaceConnResponse
+	var resp openapi.ListWorkspaceConnResponse
 	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserWorkspaceConnectionAssociations.List(context.Background(), userHandle, workspaceHandle).NextToken(*resp.NextToken).Execute()
+				resp, _, err = svc.UserWorkspaceConnectionAssociations.List(context.Background(), userHandle, workspaceHandle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserWorkspaceConnectionAssociations.List(context.Background(), userHandle, workspaceHandle).Execute()
+				resp, _, err = svc.UserWorkspaceConnectionAssociations.List(context.Background(), userHandle, workspaceHandle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -132,11 +146,16 @@ func listUserWorkspaceConnectionAssociations(ctx context.Context, d *plugin.Quer
 			return err
 		}
 
-		result := response.(openapi.TypesListWorkspaceConnResponse)
+		result := response.(openapi.ListWorkspaceConnResponse)
 
 		if result.HasItems() {
 			for _, workspaceConn := range *result.Items {
 				d.StreamListItem(ctx, workspaceConn)
+
+				// Context can be cancelled due to manual cancellation or the limit has been hit
+				if d.QueryStatus.RowsRemaining(ctx) == 0 {
+					return nil
+				}
 			}
 		}
 		if result.NextToken == nil {
@@ -149,23 +168,23 @@ func listUserWorkspaceConnectionAssociations(ctx context.Context, d *plugin.Quer
 	return nil
 }
 
-func listOrgWorkspaceConnectionAssociations(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, orgHandle string, workspaceHandle string, svc *openapi.APIClient) error {
+func listOrgWorkspaceConnectionAssociations(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, orgHandle string, workspaceHandle string, svc *openapi.APIClient, maxResults int32) error {
 	var err error
 
 	// execute list call
 	pagesLeft := true
-	var resp openapi.TypesListWorkspaceConnResponse
+	var resp openapi.ListWorkspaceConnResponse
 	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgWorkspaceConnectionAssociations.List(context.Background(), orgHandle, workspaceHandle).NextToken(*resp.NextToken).Execute()
+				resp, _, err = svc.OrgWorkspaceConnectionAssociations.List(context.Background(), orgHandle, workspaceHandle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgWorkspaceConnectionAssociations.List(context.Background(), orgHandle, workspaceHandle).Execute()
+				resp, _, err = svc.OrgWorkspaceConnectionAssociations.List(context.Background(), orgHandle, workspaceHandle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -177,11 +196,16 @@ func listOrgWorkspaceConnectionAssociations(ctx context.Context, d *plugin.Query
 			return err
 		}
 
-		result := response.(openapi.TypesListWorkspaceConnResponse)
+		result := response.(openapi.ListWorkspaceConnResponse)
 
 		if result.HasItems() {
 			for _, workspaceConn := range *result.Items {
 				d.StreamListItem(ctx, workspaceConn)
+
+				// Context can be cancelled due to manual cancellation or the limit has been hit
+				if d.QueryStatus.RowsRemaining(ctx) == 0 {
+					return nil
+				}
 			}
 		}
 		if result.NextToken == nil {
