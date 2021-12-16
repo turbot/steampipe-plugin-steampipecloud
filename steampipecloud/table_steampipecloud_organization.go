@@ -49,7 +49,7 @@ func tableSteampipeCloudOrganization(_ context.Context) *plugin.Table {
 			{
 				Name:        "created_at",
 				Description: "The organization's creation time.",
-				Type:        proto.ColumnType_STRING,
+				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
 				Name:        "version_id",
@@ -60,7 +60,7 @@ func tableSteampipeCloudOrganization(_ context.Context) *plugin.Table {
 			{
 				Name:        "updated_at",
 				Description: "The organization's last updated time.",
-				Type:        proto.ColumnType_STRING,
+				Type:        proto.ColumnType_TIMESTAMP,
 			},
 		},
 	}

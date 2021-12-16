@@ -40,30 +40,31 @@ func GetConfig(connection *plugin.Connection) steampipecloudConfig {
 }
 
 func connect(_ context.Context, d *plugin.QueryData) (*openapiclient.APIClient, error) {
-	configuration := openapiclient.NewConfiguration()
 	steampipecloudConfig := GetConfig(d.Connection)
-	if steampipecloudConfig.Host != nil && !strings.Contains(*steampipecloudConfig.Host, "cloud.steampipe.io") {
-		configuration.Servers = []openapiclient.ServerConfiguration{
-			{
-				URL:         fmt.Sprintf("%s/api/v0", *steampipecloudConfig.Host),
-				Description: "Local API",
-			},
-		}
-	} else if os.Getenv("STEAMPIPE_CLOUD_HOST") != "" && !strings.Contains(os.Getenv("STEAMPIPE_CLOUD_HOST"), "cloud.steampipe.io") {
-		configuration.Servers = []openapiclient.ServerConfiguration{
-			{
-				URL:         fmt.Sprintf("%s/api/v0", os.Getenv("STEAMPIPE_CLOUD_HOST")),
-				Description: "Local API",
-			},
-		}
+
+	token := os.Getenv("STEAMPIPE_CLOUD_TOKEN")
+	if steampipecloudConfig.Token != nil {
+		token = *steampipecloudConfig.Token
+	}
+	if token == "" {
+		return nil, errors.New("'token' must be set in the connection configuration. Edit your connection configuration file and then restart Steampipe")
 	}
 
-	if steampipecloudConfig.Token != nil {
-		configuration.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", *steampipecloudConfig.Token))
-	} else if os.Getenv("STEAMPIPE_CLOUD_TOKEN") != "" {
-		configuration.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", os.Getenv("STEAMPIPE_CLOUD_TOKEN")))
-	} else {
-		return nil, errors.New("'token' must be set in the connection configuration. Edit your connection configuration file and then restart Steampipe")
+	configuration := openapiclient.NewConfiguration()
+	configuration.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", token))
+
+	host := os.Getenv("STEAMPIPE_CLOUD_HOST")
+	if steampipecloudConfig.Host != nil {
+		host = *steampipecloudConfig.Host
+	}
+
+	if host != "" && !strings.Contains(host, "cloud.steampipe.io") {
+		configuration.Servers = []openapiclient.ServerConfiguration{
+			{
+				URL:         fmt.Sprintf("%s/api/v0", host),
+				Description: "Local API",
+			},
+		}
 	}
 
 	apiClient := openapiclient.NewAPIClient(configuration)
