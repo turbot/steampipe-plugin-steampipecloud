@@ -15,7 +15,7 @@ import (
 func tableSteampipeCloudOrganization(_ context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "steampipecloud_organization",
-		Description: "SteampipeCloud Organization",
+		Description: "Organizations include multiple users and can be used to share workspaces and connections.",
 		List: &plugin.ListConfig{
 			Hydrate: listOrganizations,
 		},
@@ -38,28 +38,28 @@ func tableSteampipeCloudOrganization(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:        "avatar_url",
-				Description: "The avatar url of the organization.",
+				Description: "The avatar URL of the organization.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "url",
-				Description: "The url of the organization.",
+				Description: "The URL of the organization.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "created_at",
-				Description: "The organization creation time.",
+				Description: "The organization's creation time.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "version_id",
-				Description: "The organization current version id.",
+				Description: "The organization version ID.",
 				Type:        proto.ColumnType_INT,
 				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "updated_at",
-				Description: "The organization last update time.",
+				Description: "The organization's last updated time.",
 				Type:        proto.ColumnType_STRING,
 			},
 		},
@@ -78,23 +78,37 @@ func listOrganizations(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 
 	getUserIdentityCached := plugin.HydrateFunc(getUserIdentity).WithCache()
 	commonData, err := getUserIdentityCached(ctx, d, h)
-	user := commonData.(openapi.TypesUser)
+	user := commonData.(openapi.User)
+
+	// If the requested number of items is less than the paging max limit
+	// set the limit to that instead
+	maxResults := int32(100)
+	limit := d.QueryContext.Limit
+	if d.QueryContext.Limit != nil {
+		if *limit < int64(maxResults) {
+			if *limit < 1 {
+				maxResults = int32(1)
+			} else {
+				maxResults = int32(*limit)
+			}
+		}
+	}
 
 	// execute list call
 	pagesLeft := true
 
-	var resp openapi.TypesListUserOrgsResponse
+	var resp openapi.ListUserOrgsResponse
 	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.Users.ListOrgs(context.Background(), user.Handle).NextToken(*resp.NextToken).Execute()
+				resp, _, err = svc.Users.ListOrgs(context.Background(), user.Handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.Users.ListOrgs(context.Background(), user.Handle).Execute()
+				resp, _, err = svc.Users.ListOrgs(context.Background(), user.Handle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -106,11 +120,16 @@ func listOrganizations(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 			return nil, err
 		}
 
-		result := response.(openapi.TypesListUserOrgsResponse)
+		result := response.(openapi.ListUserOrgsResponse)
 
 		if result.HasItems() {
 			for _, org := range *result.Items {
 				d.StreamListItem(ctx, org.Org)
+
+				// Context can be cancelled due to manual cancellation or the limit has been hit
+				if d.QueryStatus.RowsRemaining(ctx) == 0 {
+					return nil, nil
+				}
 			}
 		}
 
