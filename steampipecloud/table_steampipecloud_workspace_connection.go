@@ -48,7 +48,7 @@ func tableSteampipeCloudWorkspaceConnection(_ context.Context) *plugin.Table {
 			{
 				Name:        "created_at",
 				Description: "The creation time of the association.",
-				Type:        proto.ColumnType_STRING,
+				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
 				Name:        "version_id",
@@ -59,7 +59,7 @@ func tableSteampipeCloudWorkspaceConnection(_ context.Context) *plugin.Table {
 			{
 				Name:        "updated_at",
 				Description: "The association's last updated time.",
-				Type:        proto.ColumnType_STRING,
+				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
 				Name:        "connection",

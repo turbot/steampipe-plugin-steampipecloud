@@ -54,7 +54,7 @@ func tableSteampipeCloudUser(_ context.Context) *plugin.Table {
 			{
 				Name:        "created_at",
 				Description: "The creation time of the user.",
-				Type:        proto.ColumnType_STRING,
+				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
 				Name:        "email",
@@ -75,7 +75,7 @@ func tableSteampipeCloudUser(_ context.Context) *plugin.Table {
 			{
 				Name:        "updated_at",
 				Description: "The user's last updated time.",
-				Type:        proto.ColumnType_STRING,
+				Type:        proto.ColumnType_TIMESTAMP,
 			},
 		},
 	}
