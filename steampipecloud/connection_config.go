@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	openapiclient "github.com/turbot/steampipe-cloud-sdk-go"
 	"github.com/turbot/steampipe-plugin-sdk/plugin"
@@ -13,10 +14,14 @@ import (
 
 type steampipecloudConfig struct {
 	Token *string `cty:"token"`
+	Host  *string `cty:"host"`
 }
 
 var ConfigSchema = map[string]*schema.Attribute{
 	"token": {
+		Type: schema.TypeString,
+	},
+	"host": {
 		Type: schema.TypeString,
 	},
 }
@@ -37,7 +42,14 @@ func GetConfig(connection *plugin.Connection) steampipecloudConfig {
 func connect(_ context.Context, d *plugin.QueryData) (*openapiclient.APIClient, error) {
 	configuration := openapiclient.NewConfiguration()
 	steampipecloudConfig := GetConfig(d.Connection)
-
+	if steampipecloudConfig.Host != nil && !strings.Contains(*steampipecloudConfig.Host, "cloud.steampipe.io") {
+		configuration.Servers = []openapiclient.ServerConfiguration{
+			{
+				URL:         fmt.Sprintf("%s/api/v1", *steampipecloudConfig.Host),
+				Description: "Local API",
+			},
+		}
+	}
 	if steampipecloudConfig.Token != nil {
 		configuration.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", *steampipecloudConfig.Token))
 	} else if os.Getenv("STEAMPIPE_CLOUD_TOKEN") != "" {
