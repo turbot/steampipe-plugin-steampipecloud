@@ -75,6 +75,7 @@ connection "steampipecloud" {
 ```
 
 - `token` (required) - [API tokens](https://steampipe.io/docs/cloud/profile#api-tokens) can be used to access the Steampipe Cloud API or to connect to Steampipe Cloud workspaces from the Steampipe CLI. May alternatively be set via the `STEAMPIPE_CLOUD_TOKEN` environment variable.
+- `host` (optional) The Steampipe Cloud Host URL. This defaults to `https://cloud.steampipe.io/`. You only need to set this if you are connecting to a remote Steampipe Cloud database that is NOT hosted in `https://cloud.steampipe.io/`. This can also be set via the `STEAMPIPE_CLOUD_HOST` environment variable.
 
 ## Get Involved
 
