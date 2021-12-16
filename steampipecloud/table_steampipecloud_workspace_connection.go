@@ -89,6 +89,11 @@ func listWorkspaceConnections(ctx context.Context, d *plugin.QueryData, h *plugi
 
 	getUserIdentityCached := plugin.HydrateFunc(getUserIdentity).WithCache()
 	commonData, err := getUserIdentityCached(ctx, d, h)
+	if err != nil {
+		plugin.Logger(ctx).Error("listWorkspaceConnections", "getUserIdentityCached", err)
+		return nil, err
+	}
+
 	user := commonData.(openapi.User)
 
 	// If the requested number of items is less than the paging max limit

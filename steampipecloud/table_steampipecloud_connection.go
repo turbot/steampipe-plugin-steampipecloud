@@ -116,6 +116,11 @@ func listConnections(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 
 	getUserIdentityCached := plugin.HydrateFunc(getUserIdentity).WithCache()
 	commonData, err := getUserIdentityCached(ctx, d, h)
+	if err != nil {
+		plugin.Logger(ctx).Error("listConnections", "getUserIdentityCached", err)
+		return nil, err
+	}
+
 	user := commonData.(openapi.User)
 
 	identityHandle := d.KeyColumnQuals["identity_handle"].GetStringValue()
@@ -321,6 +326,11 @@ func getConnection(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDa
 
 	getUserIdentityCached := plugin.HydrateFunc(getUserIdentity).WithCache()
 	commonData, err := getUserIdentityCached(ctx, d, h)
+	if err != nil {
+		plugin.Logger(ctx).Error("getConnection", "getUserIdentityCached", err)
+		return nil, err
+	}
+
 	user := commonData.(openapi.User)
 	var resp interface{}
 
