@@ -31,12 +31,12 @@ func getUserIdentity(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 
 	response, err := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
-	user := response.(openapi.User)
-
 	if err != nil {
 		plugin.Logger(ctx).Error("GetUserIdentity", "error", err)
 		return nil, err
 	}
+
+	user := response.(openapi.User)
 
 	// save to extension cache
 	d.ConnectionManager.Cache.Set(cacheKey, user)
