@@ -2,6 +2,7 @@ package steampipecloud
 
 import (
 	"context"
+	"strings"
 
 	openapi "github.com/turbot/steampipe-cloud-sdk-go"
 
@@ -17,13 +18,8 @@ func tableSteampipeCloudAuditLog(_ context.Context) *plugin.Table {
 		Name:        "steampipecloud_audit_log",
 		Description: "Audit logs record a series of events performed on an identity.",
 		List: &plugin.ListConfig{
-			Hydrate: listAuditLogs,
-			KeyColumns: []*plugin.KeyColumn{
-				{
-					Name:    "identity_handle",
-					Require: plugin.Required,
-				},
-			},
+			Hydrate:    listAuditLogs,
+			KeyColumns: plugin.AnyColumn([]string{"identity_handle", "identity_id"}),
 		},
 		Columns: []*plugin.Column{
 			{
@@ -113,7 +109,8 @@ func listAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDa
 	commonData, err := getUserIdentityCached(ctx, d, h)
 	user := commonData.(openapi.User)
 
-	handle := d.KeyColumnQuals["identity_handle"].GetStringValue()
+	identityHandle := d.KeyColumnQuals["identity_handle"].GetStringValue()
+	identityId := d.KeyColumnQuals["identity_id"].GetStringValue()
 
 	// If the requested number of items is less than the paging max limit
 	// set the limit to that instead
@@ -129,10 +126,16 @@ func listAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDa
 		}
 	}
 
-	if handle == user.Handle {
-		err = listUserAuditLogs(ctx, d, h, handle, svc, maxResults)
+	if identityHandle == "" && identityId == "" {
+		return nil, nil
+	} else if identityId != "" && strings.HasPrefix(identityId, "u_") {
+		err = listUserAuditLogs(ctx, d, h, identityId, svc, maxResults)
+	} else if identityId != "" && strings.HasPrefix(identityId, "o_") {
+		err = listOrgAuditLogs(ctx, d, h, identityId, svc, maxResults)
+	} else if identityHandle == user.Handle {
+		err = listUserAuditLogs(ctx, d, h, identityHandle, svc, maxResults)
 	} else {
-		err = listOrgAuditLogs(ctx, d, h, handle, svc, maxResults)
+		err = listOrgAuditLogs(ctx, d, h, identityHandle, svc, maxResults)
 	}
 
 	if err != nil {
