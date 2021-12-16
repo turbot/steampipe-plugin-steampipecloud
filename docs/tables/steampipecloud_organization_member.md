@@ -10,7 +10,7 @@ Organization members can collaborate and share workspaces and connections.
 select
   id,
   org_id,
-  user_id,
+  user_handle,
   status
 from
   steampipecloud_organization_member;
@@ -22,10 +22,24 @@ from
 select
   id,
   org_id,
-  user_id,
+  user_handle,
   status
 from
   steampipecloud_organization_member
 where
   status = 'pending';
+```
+
+### List members with owner role
+
+```sql
+select
+  id,
+  org_id,
+  user_handle,
+  status
+from
+  steampipecloud_organization_member
+where
+  role = 'owner';
 ```

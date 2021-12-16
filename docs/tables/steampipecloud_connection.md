@@ -16,6 +16,21 @@ from
   steampipecloud_connection;
 ```
 
+### List connections using AWS plugin
+
+```sql
+select
+  id,
+  plugin,
+  handle,
+  jsonb_pretty(config) as config,
+  identity_handle
+from
+  steampipecloud_connection
+where
+  plugin = 'aws';
+```
+
 ### List user connections
 
 ```sql
@@ -23,6 +38,7 @@ select
   id,
   plugin,
   handle,
+  jsonb_pretty(config) as config,
   identity_handle
 from
   steampipecloud_connection
@@ -37,6 +53,7 @@ select
   id,
   plugin,
   handle,
+  jsonb_pretty(config) as config,
   identity_handle
 from
   steampipecloud_connection

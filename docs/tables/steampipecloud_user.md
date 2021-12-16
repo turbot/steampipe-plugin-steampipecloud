@@ -2,6 +2,8 @@
 
 Users can manage connections, organizations, and workspaces.
 
+The `steampipecloud_user` table returns information about the user whose token is used for authentication.
+
 ## Examples
 
 ### Basic info

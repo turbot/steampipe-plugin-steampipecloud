@@ -6,32 +6,54 @@ Note: You must specify an organization or user ID, or an organization or user ha
 
 ## Examples
 
-### List user audit logs
+### List audit logs for a user handle
 
 ```sql
 select
-  l.id as id,
-  l.identity_id as identity_id,
-  l.action_type as action_type,
-  l.identity_handle as identity_handle
+  id,
+  action_type,
+  jsonb_pretty(data) as data
 from
-  steampipecloud_audit_log l,
-  steampipecloud_user u
+  steampipecloud_audit_log
 where
-  l.identity_handle = u.handle;
+  identity_handle = 'myuser';
 ```
 
-### List organization workspaces
+### List audit logs for a user ID
 
 ```sql
 select
-  l.id as id,
-  l.identity_id as identity_id,
-  l.action_type as action_type,
-  l.identity_handle as identity_handle
+  id,
+  action_type,
+  jsonb_pretty(data) as data
 from
-  steampipecloud_audit_log l,
-  steampipecloud_org o
+  steampipecloud_audit_log
 where
-  l.identity_handle = o.org_handle;
+  identity_id = 'u_c6fdjke232example';
+```
+
+### List audit logs for an organization handle
+
+```sql
+select
+  id,
+  action_type,
+  jsonb_pretty(data) as data
+from
+  steampipecloud_audit_log
+where
+  identity_handle = 'myorg';
+```
+
+### List audit logs for an organization ID
+
+```sql
+select
+  id,
+  action_type,
+  jsonb_pretty(data) as data
+from
+  steampipecloud_audit_log
+where
+  identity_id = 'o_c6qjjsaa6guexample';
 ```

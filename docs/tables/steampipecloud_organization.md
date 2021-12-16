@@ -15,17 +15,3 @@ select
 from
   steampipecloud_organization;
 ```
-
-### List organizations with owner role
-
-```sql
-select
-  id,
-  org_id,
-  org_handle,
-  status
-from
-  steampipecloud_organization
-where
-  role = 'owner';
-```

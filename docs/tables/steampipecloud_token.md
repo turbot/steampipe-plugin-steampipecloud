@@ -29,3 +29,18 @@ from
 where
   status = 'inactive';
 ```
+
+### List tokens older than 90 days
+
+```sql
+select
+  id,
+  user_id,
+  status,
+  created_at,
+  last4
+from
+  steampipecloud_token
+where
+  created_at <= (current_date - interval '90' day);
+```
