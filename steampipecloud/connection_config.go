@@ -49,7 +49,15 @@ func connect(_ context.Context, d *plugin.QueryData) (*openapiclient.APIClient, 
 				Description: "Local API",
 			},
 		}
+	} else if os.Getenv("STEAMPIPE_CLOUD_HOST") != "" && !strings.Contains(os.Getenv("STEAMPIPE_CLOUD_HOST"), "cloud.steampipe.io") {
+		configuration.Servers = []openapiclient.ServerConfiguration{
+			{
+				URL:         fmt.Sprintf("%s/api/v1", os.Getenv("STEAMPIPE_CLOUD_HOST")),
+				Description: "Local API",
+			},
+		}
 	}
+
 	if steampipecloudConfig.Token != nil {
 		configuration.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", *steampipecloudConfig.Token))
 	} else if os.Getenv("STEAMPIPE_CLOUD_TOKEN") != "" {
