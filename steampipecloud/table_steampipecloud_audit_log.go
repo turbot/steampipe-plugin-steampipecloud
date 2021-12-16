@@ -107,6 +107,11 @@ func listAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDa
 
 	getUserIdentityCached := plugin.HydrateFunc(getUserIdentity).WithCache()
 	commonData, err := getUserIdentityCached(ctx, d, h)
+	if err != nil {
+		plugin.Logger(ctx).Error("listAuditLogs", "getUserIdentityCached", err)
+		return nil, err
+	}
+
 	user := commonData.(openapi.User)
 
 	identityHandle := d.KeyColumnQuals["identity_handle"].GetStringValue()
