@@ -26,7 +26,7 @@ select
 from
   steampipecloud_organization_member
 where
-  status = 'pending'
+  status = 'accepted'
 ```
 
 ```
