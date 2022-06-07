@@ -46,6 +46,12 @@ func tableSteampipeCloudWorkspaceMod(_ context.Context) *plugin.Table {
 				Transform:   transform.FromCamel(),
 			},
 			{
+				Name:        "identity_type",
+				Description: "The type of identity, which can be 'user' or 'org'.",
+				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromField("Workspace.Identity.Type"),
+			},
+			{
 				Name:        "mod_constraint",
 				Description: "Version constraint for the mod.",
 				Type:        proto.ColumnType_STRING,
@@ -179,6 +185,7 @@ func listUserWorkspaceMods(ctx context.Context, d *plugin.QueryData, h *plugin.H
 				workspaceMod.Workspace.Handle = workspaceHandle
 				workspaceMod.Workspace.Identity = &openapi.Identity{}
 				workspaceMod.Workspace.Identity.Handle = userHandle
+				workspaceMod.Workspace.Identity.Type = "user"
 				d.StreamListItem(ctx, workspaceMod)
 
 				// Context can be cancelled due to manual cancellation or the limit has been hit
@@ -233,6 +240,7 @@ func listOrgWorkspaceMods(ctx context.Context, d *plugin.QueryData, h *plugin.Hy
 				workspaceMod.Workspace.Handle = workspaceHandle
 				workspaceMod.Workspace.Identity = &openapi.Identity{}
 				workspaceMod.Workspace.Identity.Handle = orgHandle
+				workspaceMod.Workspace.Identity.Type = "org"
 				d.StreamListItem(ctx, workspaceMod)
 
 				// Context can be cancelled due to manual cancellation or the limit has been hit
