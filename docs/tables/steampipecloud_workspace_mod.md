@@ -4,7 +4,7 @@ A Steampipe mod is a portable, versioned collection of related Steampipe resourc
 
 ## Examples
 
-### Basic info
+### Basic information about mods across all workspaces
 
 ```sql
 select
@@ -18,7 +18,7 @@ from
   steampipecloud_workspace_mod;
 ```
 
-### List user workspaces
+### List mods for all workspaces of the user
 
 ```sql
 select
@@ -34,7 +34,7 @@ where
   identity_type = 'user';
 ```
 
-### List organization workspaces
+### List mods for all workspaces belonging to all organizations that the user is a member of
 
 ```sql
 select
@@ -48,20 +48,4 @@ from
   steampipecloud_workspace_mod
 where
   identity_type = 'org';
-```
-
-### List workspaces mods which are not installed
-
-```sql
-select
-  id,
-  path,
-  alias,
-  mod_constraint,
-  installed_version,
-  state
-from
-  steampipecloud_workspace_mod
-where
-  state <> 'installed';
 ```
