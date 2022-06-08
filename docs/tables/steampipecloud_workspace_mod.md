@@ -49,3 +49,29 @@ from
 where
   identity_type = 'org';
 ```
+
+### List mods for a particular workspace belonging to an organization
+
+```sql
+select 
+  swm.id,
+  swm.path,
+  swm.alias,
+  swm.mod_constraint,
+  swm.installed_version,
+  swm.state
+from 
+  steampipecloud_workspace_mod swm 
+inner join 
+  steampipecloud_organization so
+on 
+  so.id = swm.identity_id
+inner join
+  steampipecloud_workspace sw
+on
+  sw.id = swm.workspace_id
+where
+  so.handle = 'testorg'
+and
+  sw.handle = 'dev';
+```

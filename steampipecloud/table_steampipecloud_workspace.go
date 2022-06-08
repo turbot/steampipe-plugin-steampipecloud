@@ -397,7 +397,7 @@ func getUserWorkspace(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
 	workspace := response.(openapi.Workspace)
 
 	if err != nil {
-		plugin.Logger(ctx).Error("getOrgWorkspace", "get", err)
+		plugin.Logger(ctx).Error("getUserWorkspace", "get", err)
 		return nil, err
 	}
 

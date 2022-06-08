@@ -19,12 +19,10 @@ func tableSteampipeCloudWorkspaceMod(_ context.Context) *plugin.Table {
 		List: &plugin.ListConfig{
 			ParentHydrate: listWorkspaces,
 			Hydrate:       listWorkspaceMods,
-			KeyColumns: []*plugin.KeyColumn{
-				{
-					Name:    "workspace_id",
-					Require: plugin.Optional,
-				},
-			},
+		},
+		Get: &plugin.GetConfig{
+			KeyColumns: plugin.AllColumns([]string{"identity_id", "workspace_id", "alias"}),
+			Hydrate:    getWorkspaceMod,
 		},
 		Columns: []*plugin.Column{
 			{
@@ -257,4 +255,103 @@ func listOrgWorkspaceMods(ctx context.Context, d *plugin.QueryData, h *plugin.Hy
 	}
 
 	return nil
+}
+
+//// GET FUNCTION
+
+func getWorkspaceMod(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	identityId := d.KeyColumnQuals["identity_id"].GetStringValue()
+	workspaceId := d.KeyColumnQuals["workspace_id"].GetStringValue()
+	alias := d.KeyColumnQuals["alias"].GetStringValue()
+
+	// check if identity or workspace or alias information is missing
+	if identityId == "" || workspaceId == "" || alias == "" {
+		return nil, nil
+	}
+
+	// Create Session
+	svc, err := connect(ctx, d)
+	if err != nil {
+		plugin.Logger(ctx).Error("getWorkspaceMod", "connection_error", err)
+		return nil, err
+	}
+
+	getUserIdentityCached := plugin.HydrateFunc(getUserIdentity).WithCache()
+	commonData, err := getUserIdentityCached(ctx, d, h)
+	if err != nil {
+		plugin.Logger(ctx).Error("getWorkspaceMod", "getUserIdentityCached", err)
+		return nil, err
+	}
+
+	user := commonData.(openapi.User)
+	var resp interface{}
+
+	if identityId == user.Id {
+		resp, err = getUserWorkspaceMod(ctx, d, h, identityId, workspaceId, alias, svc)
+	} else {
+		resp, err = getOrgWorkspaceMod(ctx, d, h, identityId, workspaceId, alias, svc)
+	}
+
+	if err != nil {
+		plugin.Logger(ctx).Error("getWorkspaceMod", "get", err)
+		return nil, err
+	}
+
+	if resp == nil {
+		return nil, nil
+	}
+
+	return resp.(openapi.WorkspaceMod), nil
+}
+
+func getUserWorkspaceMod(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, identityId string, workspaceId string, alias string, svc *openapi.APIClient) (interface{}, error) {
+	var err error
+
+	// execute get call
+	var resp openapi.WorkspaceMod
+
+	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+		resp, _, err = svc.UserWorkspaceMods.Get(context.Background(), identityId, workspaceId, alias).Execute()
+		return resp, err
+	}
+
+	response, err := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
+
+	workspaceMod := response.(openapi.WorkspaceMod)
+	workspaceMod.Workspace = &openapi.Workspace{}
+	workspaceMod.Workspace.Identity = &openapi.Identity{}
+	workspaceMod.Workspace.Identity.Type = "user"
+
+	if err != nil {
+		plugin.Logger(ctx).Error("getUserWorkspaceMod", "get", err)
+		return nil, err
+	}
+
+	return workspaceMod, nil
+}
+
+func getOrgWorkspaceMod(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, identityId string, workspaceId string, alias string, svc *openapi.APIClient) (interface{}, error) {
+	var err error
+
+	// execute get call
+	var resp openapi.WorkspaceMod
+
+	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+		resp, _, err = svc.OrgWorkspaceMods.Get(context.Background(), identityId, workspaceId, alias).Execute()
+		return resp, err
+	}
+
+	response, err := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
+
+	workspaceMod := response.(openapi.WorkspaceMod)
+	workspaceMod.Workspace = &openapi.Workspace{}
+	workspaceMod.Workspace.Identity = &openapi.Identity{}
+	workspaceMod.Workspace.Identity.Type = "org"
+
+	if err != nil {
+		plugin.Logger(ctx).Error("getOrgWorkspaceMod", "get", err)
+		return nil, err
+	}
+
+	return workspaceMod, nil
 }
