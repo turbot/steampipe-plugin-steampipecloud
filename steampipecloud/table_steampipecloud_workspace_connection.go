@@ -61,16 +61,6 @@ func tableSteampipeCloudWorkspaceConnection(_ context.Context) *plugin.Table {
 				Description: "The association's last updated time.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
-			{
-				Name:        "connection",
-				Description: "The connection details of the association.",
-				Type:        proto.ColumnType_JSON,
-			},
-			{
-				Name:        "workspace",
-				Description: "The workspace details of the association.",
-				Type:        proto.ColumnType_JSON,
-			},
 		},
 	}
 }

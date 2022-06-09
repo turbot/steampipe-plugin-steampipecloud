@@ -95,11 +95,6 @@ func tableSteampipeCloudWorkspace(_ context.Context) *plugin.Table {
 				Description: "The workspace's last updated time.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
-			{
-				Name:        "identity",
-				Description: "Information about the identity.",
-				Type:        proto.ColumnType_JSON,
-			},
 		},
 	}
 }

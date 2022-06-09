@@ -82,11 +82,6 @@ func tableSteampipeCloudOrganizationMember(_ context.Context) *plugin.Table {
 				Type:        proto.ColumnType_INT,
 				Transform:   transform.FromCamel(),
 			},
-			{
-				Name:        "user",
-				Description: "The user details.",
-				Type:        proto.ColumnType_JSON,
-			},
 		},
 	}
 }
