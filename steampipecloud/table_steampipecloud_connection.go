@@ -95,11 +95,6 @@ func tableSteampipeCloudConnection(_ context.Context) *plugin.Table {
 				Description: "The connection config details.",
 				Type:        proto.ColumnType_JSON,
 			},
-			{
-				Name:        "identity",
-				Description: "Information about the identity.",
-				Type:        proto.ColumnType_JSON,
-			},
 		},
 	}
 }

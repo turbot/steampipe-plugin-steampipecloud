@@ -95,11 +95,6 @@ func tableSteampipeCloudWorkspace(_ context.Context) *plugin.Table {
 				Description: "The workspace's last updated time.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
-			{
-				Name:        "identity",
-				Description: "Information about the identity.",
-				Type:        proto.ColumnType_JSON,
-			},
 		},
 	}
 }
@@ -397,7 +392,7 @@ func getUserWorkspace(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
 	workspace := response.(openapi.Workspace)
 
 	if err != nil {
-		plugin.Logger(ctx).Error("getOrgWorkspace", "get", err)
+		plugin.Logger(ctx).Error("getUserWorkspace", "get", err)
 		return nil, err
 	}
 
