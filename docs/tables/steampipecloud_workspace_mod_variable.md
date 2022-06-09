@@ -23,7 +23,7 @@ and
   mod_alias = 'aws_thrifty';
 ```
 
-### List all variables which have an explicit setting
+### List all variables which have an explicit setting in a workspace mod
 
 ```sql
 select
@@ -44,7 +44,7 @@ and
   value_setting is not null;
 ```
 
-### List all variables of type number for a mod
+### List details about a particular variable in a workspace mod
 
 ```sql
 select
@@ -60,7 +60,7 @@ from
 where
   workspace_id = 'w_cafeina2ip835d2eoacg'
 and
-  mod_alias = 'aws_thrifty' 
+  mod_alias = 'aws_tags' 
 and 
-  type = 'number';
+  name = 'mandatory_tags';
 ```

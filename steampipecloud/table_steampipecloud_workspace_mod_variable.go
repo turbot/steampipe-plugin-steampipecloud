@@ -36,6 +36,12 @@ func tableSteampipeCloudWorkspaceModVariable(_ context.Context) *plugin.Table {
 				Transform:   transform.FromCamel(),
 			},
 			{
+				Name:        "workspace_id",
+				Description: "The identifier of the workspace to which the variable belongs.",
+				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromQual("workspace_id"),
+			},
+			{
 				Name:        "mod_alias",
 				Description: "The alias of the mod to which the variable belongs to.",
 				Type:        proto.ColumnType_STRING,
@@ -109,12 +115,6 @@ func tableSteampipeCloudWorkspaceModVariable(_ context.Context) *plugin.Table {
 				Description: "Information about the user who updated the Setting.",
 				Type:        proto.ColumnType_JSON,
 			},
-			{
-				Name:        "workspace_id",
-				Description: "The identifier/handle of the workspace to which the variable belongs.",
-				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromQual("workspace_id"),
-			},
 		},
 	}
 }
@@ -124,9 +124,6 @@ func tableSteampipeCloudWorkspaceModVariable(_ context.Context) *plugin.Table {
 func listWorkspaceModVariables(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	workspaceId := d.KeyColumnQuals["workspace_id"].GetStringValue()
 	modId := d.KeyColumnQuals["mod_alias"].GetStringValue()
-
-	plugin.Logger(ctx).Trace("listWorkspaceModVariables", "workspaceId", workspaceId)
-	plugin.Logger(ctx).Trace("listWorkspaceModVariables", "modId", modId)
 
 	// If key qual columns are not mentioned, exit
 	if workspaceId == "" || modId == "" {
