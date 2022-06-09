@@ -19,8 +19,7 @@ from
   steampipecloud_workspace_mod_variable
 where
   workspace_id = 'w_cafeina2ip835d2eoacg' 
-and 
-  mod_alias = 'aws_thrifty';
+  and mod_alias = 'aws_thrifty';
 ```
 
 ### List all variables which have an explicit setting in a workspace mod
@@ -38,10 +37,8 @@ from
   steampipecloud_workspace_mod_variable
 where
   workspace_id = 'w_cafeina2ip835d2eoacg'
-and
-  mod_alias = 'aws_thrifty' 
-and 
-  value_setting is not null;
+  and mod_alias = 'aws_thrifty' 
+  and value_setting is not null;
 ```
 
 ### List details about a particular variable in a workspace mod
@@ -59,8 +56,6 @@ from
   steampipecloud_workspace_mod_variable
 where
   workspace_id = 'w_cafeina2ip835d2eoacg'
-and
-  mod_alias = 'aws_tags' 
-and 
-  name = 'mandatory_tags';
+  and mod_alias = 'aws_tags' 
+  and name = 'mandatory_tags';
 ```
