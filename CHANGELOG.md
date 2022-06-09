@@ -1,3 +1,11 @@
+## v0.2.0 [2022-06-09]
+
+_What's new?_
+
+- New tables added
+  - [steampipecloud_workspace_mod](https://hub.steampipe.io/plugins/turbot/steampipecloud/tables/steampipecloud_workspace_mod) ([#14](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/14))
+  - [steampipecloud_workspace_mod_variable](https://hub.steampipe.io/plugins/turbot/steampipecloud/tables/steampipecloud_workspace_mod_variable) ([#14](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/14))
+
 ## v0.1.0 [2022-04-28]
 
 _Enhancements_
