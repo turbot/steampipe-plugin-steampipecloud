@@ -62,8 +62,8 @@ select
   swm.state
 from 
   steampipecloud_workspace_mod as swm 
-inner join steampipecloud_organization as so on so.id = swm.identity_id
-inner join steampipecloud_workspace as sw on sw.id = swm.workspace_id
+  inner join steampipecloud_organization as so on so.id = swm.identity_id
+  inner join steampipecloud_workspace as sw on sw.id = swm.workspace_id
 where
   so.handle = 'testorg'
   and sw.handle = 'dev';
