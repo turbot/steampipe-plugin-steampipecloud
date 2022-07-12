@@ -100,10 +100,10 @@ func listWorkspaceConnections(ctx context.Context, d *plugin.QueryData, h *plugi
 		}
 	}
 
-	if workspace.Identity.Handle == user.Handle {
+	if workspace.IdentityId == user.Id {
 		err = listUserWorkspaceConnectionAssociations(ctx, d, h, user.Handle, workspace.Handle, svc, maxResults)
 	} else {
-		err = listOrgWorkspaceConnectionAssociations(ctx, d, h, workspace.Identity.Handle, workspace.Handle, svc, maxResults)
+		err = listOrgWorkspaceConnectionAssociations(ctx, d, h, workspace.IdentityId, workspace.Handle, svc, maxResults)
 	}
 
 	if err != nil {

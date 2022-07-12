@@ -42,24 +42,28 @@ func tableSteampipeCloudWorkspace(_ context.Context) *plugin.Table {
 				Transform:   transform.FromCamel(),
 			},
 			{
-				Name:        "workspace_state",
+				Name:        "state",
 				Description: "The current workspace state.",
 				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "handle",
 				Description: "The handle name for the workspace.",
 				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "database_name",
 				Description: "The database name for the workspace.",
 				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "created_at",
 				Description: "The creation time of the workspace.",
 				Type:        proto.ColumnType_TIMESTAMP,
+				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "hive",
@@ -94,6 +98,7 @@ func tableSteampipeCloudWorkspace(_ context.Context) *plugin.Table {
 				Name:        "updated_at",
 				Description: "The workspace's last updated time.",
 				Type:        proto.ColumnType_TIMESTAMP,
+				Transform:   transform.FromCamel(),
 			},
 		},
 	}

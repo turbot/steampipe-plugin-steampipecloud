@@ -50,7 +50,7 @@ func tableSteampipeCloudWorkspaceMod(_ context.Context) *plugin.Table {
 				Transform:   transform.FromField("Workspace.Identity.Type"),
 			},
 			{
-				Name:        "mod_constraint",
+				Name:        "constraint",
 				Description: "Version constraint for the mod.",
 				Type:        proto.ColumnType_STRING,
 				Transform:   transform.FromCamel(),
@@ -181,9 +181,6 @@ func listUserWorkspaceMods(ctx context.Context, d *plugin.QueryData, h *plugin.H
 			for _, workspaceMod := range *result.Items {
 				workspaceMod.Workspace = &openapi.Workspace{}
 				workspaceMod.Workspace.Handle = workspaceHandle
-				workspaceMod.Workspace.Identity = &openapi.Identity{}
-				workspaceMod.Workspace.Identity.Handle = userHandle
-				workspaceMod.Workspace.Identity.Type = "user"
 				d.StreamListItem(ctx, workspaceMod)
 
 				// Context can be cancelled due to manual cancellation or the limit has been hit
@@ -236,9 +233,6 @@ func listOrgWorkspaceMods(ctx context.Context, d *plugin.QueryData, h *plugin.Hy
 			for _, workspaceMod := range *result.Items {
 				workspaceMod.Workspace = &openapi.Workspace{}
 				workspaceMod.Workspace.Handle = workspaceHandle
-				workspaceMod.Workspace.Identity = &openapi.Identity{}
-				workspaceMod.Workspace.Identity.Handle = orgHandle
-				workspaceMod.Workspace.Identity.Type = "org"
 				d.StreamListItem(ctx, workspaceMod)
 
 				// Context can be cancelled due to manual cancellation or the limit has been hit
@@ -319,8 +313,6 @@ func getUserWorkspaceMod(ctx context.Context, d *plugin.QueryData, h *plugin.Hyd
 
 	workspaceMod := response.(openapi.WorkspaceMod)
 	workspaceMod.Workspace = &openapi.Workspace{}
-	workspaceMod.Workspace.Identity = &openapi.Identity{}
-	workspaceMod.Workspace.Identity.Type = "user"
 
 	if err != nil {
 		plugin.Logger(ctx).Error("getUserWorkspaceMod", "get", err)
@@ -345,8 +337,6 @@ func getOrgWorkspaceMod(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 
 	workspaceMod := response.(openapi.WorkspaceMod)
 	workspaceMod.Workspace = &openapi.Workspace{}
-	workspaceMod.Workspace.Identity = &openapi.Identity{}
-	workspaceMod.Workspace.Identity.Type = "org"
 
 	if err != nil {
 		plugin.Logger(ctx).Error("getOrgWorkspaceMod", "get", err)
