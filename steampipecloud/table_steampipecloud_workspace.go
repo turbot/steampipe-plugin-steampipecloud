@@ -109,7 +109,7 @@ func tableSteampipeCloudWorkspace(_ context.Context) *plugin.Table {
 				Name:        "updated_by",
 				Description: "ID of the user who last updated the workspace.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromField("UpdatedByI"),
+				Transform:   transform.FromField("UpdatedById"),
 			},
 			{
 				Name:        "version_id",
