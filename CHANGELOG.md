@@ -1,3 +1,24 @@
+## v0.3.0 [2022-07-20]
+
+_What's new?_
+
+- New table added
+  - [steampipecloud_organization_workspace_member](https://hub.steampipe.io/plugins/turbot/steampipecloud/tables/steampipecloud_organization_workspace_member) ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
+
+_Enhancements_
+
+- [steampipecloud_organization_workspace_mod](https://hub.steampipe.io/plugins/turbot/steampipecloud/tables/steampipecloud_workspace_mod)
+  - Renamed column `mod_constraint` to `constraint`
+- [steampipecloud_workspace](https://hub.steampipe.io/plugins/turbot/steampipecloud/tables/steampipecloud_workspace)
+  - Renamed column `workspace_state` to `state`
+  - Added columns `created_by`, `updated_by`, `version_id`
+- [steampipecloud_organization_member](https://hub.steampipe.io/plugins/turbot/steampipecloud/tables/steampipecloud_organization_member)
+  - Added columns `created_by`, `updated_by`, `org_handle`
+  - Added Get method to get a particular org member
+- [steampipecloud_organization](https://hub.steampipe.io/plugins/turbot/steampipecloud/tables/steampipecloud_organization)
+  - Added columns `created_by`, `updated_by`
+  - Added Get method to get a particular organization
+
 ## v0.2.0 [2022-06-09]
 
 _What's new?_
