@@ -124,12 +124,12 @@ func listUserWorkspaceConnectionAssociations(ctx context.Context, d *plugin.Quer
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserWorkspaceConnectionAssociations.List(context.Background(), userHandle, workspaceHandle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
+				resp, _, err = svc.UserWorkspaceConnectionAssociations.List(ctx, userHandle, workspaceHandle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserWorkspaceConnectionAssociations.List(context.Background(), userHandle, workspaceHandle).Limit(maxResults).Execute()
+				resp, _, err = svc.UserWorkspaceConnectionAssociations.List(ctx, userHandle, workspaceHandle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -174,12 +174,12 @@ func listOrgWorkspaceConnectionAssociations(ctx context.Context, d *plugin.Query
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgWorkspaceConnectionAssociations.List(context.Background(), orgHandle, workspaceHandle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
+				resp, _, err = svc.OrgWorkspaceConnectionAssociations.List(ctx, orgHandle, workspaceHandle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgWorkspaceConnectionAssociations.List(context.Background(), orgHandle, workspaceHandle).Limit(maxResults).Execute()
+				resp, _, err = svc.OrgWorkspaceConnectionAssociations.List(ctx, orgHandle, workspaceHandle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}

@@ -158,12 +158,12 @@ func listUserWorkspaceMods(ctx context.Context, d *plugin.QueryData, h *plugin.H
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserWorkspaceMods.List(context.Background(), userHandle, workspaceHandle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
+				resp, _, err = svc.UserWorkspaceMods.List(ctx, userHandle, workspaceHandle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserWorkspaceMods.List(context.Background(), userHandle, workspaceHandle).Limit(maxResults).Execute()
+				resp, _, err = svc.UserWorkspaceMods.List(ctx, userHandle, workspaceHandle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -210,12 +210,12 @@ func listOrgWorkspaceMods(ctx context.Context, d *plugin.QueryData, h *plugin.Hy
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgWorkspaceMods.List(context.Background(), orgHandle, workspaceHandle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
+				resp, _, err = svc.OrgWorkspaceMods.List(ctx, orgHandle, workspaceHandle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgWorkspaceMods.List(context.Background(), orgHandle, workspaceHandle).Limit(maxResults).Execute()
+				resp, _, err = svc.OrgWorkspaceMods.List(ctx, orgHandle, workspaceHandle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -305,7 +305,7 @@ func getUserWorkspaceMod(ctx context.Context, d *plugin.QueryData, h *plugin.Hyd
 	var resp openapi.WorkspaceMod
 
 	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-		resp, _, err = svc.UserWorkspaceMods.Get(context.Background(), identityId, workspaceId, alias).Execute()
+		resp, _, err = svc.UserWorkspaceMods.Get(ctx, identityId, workspaceId, alias).Execute()
 		return resp, err
 	}
 
@@ -329,7 +329,7 @@ func getOrgWorkspaceMod(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 	var resp openapi.WorkspaceMod
 
 	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-		resp, _, err = svc.OrgWorkspaceMods.Get(context.Background(), identityId, workspaceId, alias).Execute()
+		resp, _, err = svc.OrgWorkspaceMods.Get(ctx, identityId, workspaceId, alias).Execute()
 		return resp, err
 	}
 

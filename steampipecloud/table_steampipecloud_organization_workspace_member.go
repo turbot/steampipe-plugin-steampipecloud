@@ -176,12 +176,12 @@ func listOrgWorkspaceMembers(ctx context.Context, d *plugin.QueryData, h *plugin
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgWorkspaceMembers.List(context.Background(), orgHandle, workspaceHandle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
+				resp, _, err = svc.OrgWorkspaceMembers.List(ctx, orgHandle, workspaceHandle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgWorkspaceMembers.List(context.Background(), orgHandle, workspaceHandle).Limit(maxResults).Execute()
+				resp, _, err = svc.OrgWorkspaceMembers.List(ctx, orgHandle, workspaceHandle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -264,7 +264,7 @@ func getOrgWorkspaceDetails(ctx context.Context, d *plugin.QueryData, h *plugin.
 	switch w := h.ParentItem.(type) {
 	case openapi.Workspace:
 		getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-			resp, _, err := svc.Orgs.Get(context.Background(), h.ParentItem.(openapi.Workspace).IdentityId).Execute()
+			resp, _, err := svc.Orgs.Get(ctx, h.ParentItem.(openapi.Workspace).IdentityId).Execute()
 			return resp, err
 		}
 		response, _ := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
@@ -274,7 +274,7 @@ func getOrgWorkspaceDetails(ctx context.Context, d *plugin.QueryData, h *plugin.
 	}
 
 	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-		resp, _, err := svc.Orgs.Get(context.Background(), h.Item.(openapi.OrgWorkspaceUser).OrgId).Execute()
+		resp, _, err := svc.Orgs.Get(ctx, h.Item.(openapi.OrgWorkspaceUser).OrgId).Execute()
 		return resp, err
 	}
 	response, _ := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})

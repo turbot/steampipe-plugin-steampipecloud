@@ -188,12 +188,12 @@ func listUserWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserWorkspaces.List(context.Background(), handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
+				resp, _, err = svc.UserWorkspaces.List(ctx, handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserWorkspaces.List(context.Background(), handle).Limit(maxResults).Execute()
+				resp, _, err = svc.UserWorkspaces.List(ctx, handle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -239,12 +239,12 @@ func listOrgWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgWorkspaces.List(context.Background(), handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
+				resp, _, err = svc.OrgWorkspaces.List(ctx, handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgWorkspaces.List(context.Background(), handle).Limit(maxResults).Execute()
+				resp, _, err = svc.OrgWorkspaces.List(ctx, handle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -290,12 +290,12 @@ func listActorWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.Hyd
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.Actors.ListWorkspaces(context.Background()).NextToken(*resp.NextToken).Limit(maxResults).Execute()
+				resp, _, err = svc.Actors.ListWorkspaces(ctx).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.Actors.ListWorkspaces(context.Background()).Limit(maxResults).Execute()
+				resp, _, err = svc.Actors.ListWorkspaces(ctx).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -382,7 +382,7 @@ func getOrgWorkspace(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 	var resp openapi.Workspace
 
 	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-		resp, _, err = svc.OrgWorkspaces.Get(context.Background(), identityHandle, handle).Execute()
+		resp, _, err = svc.OrgWorkspaces.Get(ctx, identityHandle, handle).Execute()
 		return resp, err
 	}
 
@@ -405,7 +405,7 @@ func getUserWorkspace(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
 	var resp openapi.Workspace
 
 	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-		resp, _, err = svc.UserWorkspaces.Get(context.Background(), identityHandle, handle).Execute()
+		resp, _, err = svc.UserWorkspaces.Get(ctx, identityHandle, handle).Execute()
 		return resp, err
 	}
 
@@ -441,7 +441,7 @@ func getIdentityDetails(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 	}
 
 	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-		resp, _, err := svc.Identities.Get(context.Background(), identityId).Execute()
+		resp, _, err := svc.Identities.Get(ctx, identityId).Execute()
 		return resp, err
 	}
 

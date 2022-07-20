@@ -153,12 +153,12 @@ func listOrgMembers(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateD
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgMembers.List(context.Background(), handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
+				resp, _, err = svc.OrgMembers.List(ctx, handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgMembers.List(context.Background(), handle).Limit(maxResults).Execute()
+				resp, _, err = svc.OrgMembers.List(ctx, handle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -246,7 +246,7 @@ func getOrgDetails(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDa
 	}
 
 	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-		resp, _, err := svc.Orgs.Get(context.Background(), h.Item.(openapi.OrgUser).OrgId).Execute()
+		resp, _, err := svc.Orgs.Get(ctx, h.Item.(openapi.OrgUser).OrgId).Execute()
 		return resp, err
 	}
 

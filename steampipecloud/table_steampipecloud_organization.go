@@ -2,7 +2,6 @@ package steampipecloud
 
 import (
 	"context"
-	"encoding/json"
 
 	openapi "github.com/turbot/steampipe-cloud-sdk-go"
 
@@ -118,12 +117,12 @@ func listOrganizations(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.Actors.ListOrgs(context.Background()).NextToken(*resp.NextToken).Limit(maxResults).Execute()
+				resp, _, err = svc.Actors.ListOrgs(ctx).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.Actors.ListOrgs(context.Background()).Limit(maxResults).Execute()
+				resp, _, err = svc.Actors.ListOrgs(ctx).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -176,7 +175,7 @@ func getOrganization(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 	var resp openapi.Org
 
 	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-		resp, _, err = svc.Orgs.Get(context.Background(), handle).Execute()
+		resp, _, err = svc.Orgs.Get(ctx, handle).Execute()
 		return resp, err
 	}
 
