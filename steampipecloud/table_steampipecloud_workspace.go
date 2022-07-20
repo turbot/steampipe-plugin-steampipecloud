@@ -445,7 +445,7 @@ func getIdentityDetails(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 		return resp, err
 	}
 
-	response, err := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
+	response, _ := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 	identity := response.(openapi.Identity)
 
 	return &IdentityDetails{IdentityHandle: identity.Handle, IdentityType: identity.Type}, nil

@@ -147,8 +147,7 @@ func listOrganizationWorkspaceMembers(ctx context.Context, d *plugin.QueryData, 
 		}
 	}
 
-	var err error
-	err = listOrgWorkspaceMembers(ctx, d, h, workspace.IdentityId, workspace.Handle, maxResults)
+	err := listOrgWorkspaceMembers(ctx, d, h, workspace.IdentityId, workspace.Handle, maxResults)
 	if err != nil {
 		plugin.Logger(ctx).Error("listOrganizationWorkspaceMembers", "error", err)
 		return nil, err

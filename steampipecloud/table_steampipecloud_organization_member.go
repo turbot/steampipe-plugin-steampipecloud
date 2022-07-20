@@ -249,7 +249,7 @@ func getOrgDetails(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDa
 		return resp, err
 	}
 
-	response, err := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
+	response, _ := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
 	return &OrgDetails{OrgHandle: response.(openapi.Org).Handle}, nil
 }
