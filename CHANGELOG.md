@@ -2,7 +2,7 @@
 
 _What's new?_
 
-- New table added
+- New tables added
   - [steampipecloud_organization_workspace_member](https://hub.steampipe.io/plugins/turbot/steampipecloud/tables/steampipecloud_organization_workspace_member) ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
 
 _Enhancements_
@@ -23,7 +23,7 @@ _Enhancements_
 
 _Dependencies_
 
-- Upgraded [steampipe-cloud-sdk-go](https://github.com/turbot/steampipe-cloud-sdk-go/blob/main/CHANGELOG.md#012-2022-07-19) to v0.1.2 ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
+- Recompiled plugin with [steampipe-cloud-sdk-go v0.1.2](https://github.com/turbot/steampipe-cloud-sdk-go/blob/main/CHANGELOG.md#012-2022-07-19) ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
 
 ## v0.2.0 [2022-06-09]
 

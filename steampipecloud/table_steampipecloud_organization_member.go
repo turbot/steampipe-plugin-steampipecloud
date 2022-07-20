@@ -124,8 +124,7 @@ func listOrganizationMembers(ctx context.Context, d *plugin.QueryData, h *plugin
 		}
 	}
 
-	var err error
-	err = listOrgMembers(ctx, d, h, org.Handle, maxResults)
+	err := listOrgMembers(ctx, d, h, org.Handle, maxResults)
 	if err != nil {
 		plugin.Logger(ctx).Error("listOrganizationMembers", "error", err)
 		return nil, err
