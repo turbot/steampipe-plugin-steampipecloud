@@ -50,10 +50,10 @@ func tableSteampipeCloudWorkspaceMod(_ context.Context) *plugin.Table {
 				Transform:   transform.FromField("Workspace.Identity.Type"),
 			},
 			{
-				Name:        "constraint",
+				Name:        "mod_constraint",
 				Description: "Version constraint for the mod.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromCamel(),
+				Transform:   transform.FromField("Constraint"),
 			},
 			{
 				Name:        "alias",

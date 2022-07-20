@@ -7,9 +7,6 @@ _What's new?_
 
 _Enhancements_
 
-- Updated: Rename column `mod_constraint` to `constraint` in `steampipecloud_organization_workspace_mod` table ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
-- Updated: Rename column `workspace_state` to `state` in `steampipecloud_workspace` table ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
-  - workspace_state to state
 - Added the following new columns to `steampipecloud_workspace` table: ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
   - created_by
   - updated_by

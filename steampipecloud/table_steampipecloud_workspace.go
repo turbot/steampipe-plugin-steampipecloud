@@ -47,10 +47,10 @@ func tableSteampipeCloudWorkspace(_ context.Context) *plugin.Table {
 				Transform:   transform.FromCamel(),
 			},
 			{
-				Name:        "state",
+				Name:        "workspace_state",
 				Description: "The current workspace state.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromCamel(),
+				Transform:   transform.FromField("State"),
 			},
 			{
 				Name:        "handle",
