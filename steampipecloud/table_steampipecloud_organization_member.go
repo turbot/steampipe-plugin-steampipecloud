@@ -10,6 +10,10 @@ import (
 	"github.com/turbot/steampipe-plugin-sdk/v3/plugin/transform"
 )
 
+type OrgDetails struct {
+	OrgHandle string `json:"org_handle"`
+}
+
 //// TABLE DEFINITION
 
 func tableSteampipeCloudOrganizationMember(_ context.Context) *plugin.Table {
@@ -21,8 +25,8 @@ func tableSteampipeCloudOrganizationMember(_ context.Context) *plugin.Table {
 			Hydrate:       listOrganizationMembers,
 		},
 		Get: &plugin.GetConfig{
-			KeyColumns: plugin.AllColumns([]string{"handle"}),
-			Hydrate:    getOrganization,
+			KeyColumns: plugin.AllColumns([]string{"org_handle", "user_handle"}),
+			Hydrate:    getOrganizationMember,
 		},
 		Columns: []*plugin.Column{
 			{
@@ -36,6 +40,12 @@ func tableSteampipeCloudOrganizationMember(_ context.Context) *plugin.Table {
 				Description: "The unique identifier for the organization.",
 				Type:        proto.ColumnType_STRING,
 				Transform:   transform.FromCamel(),
+			},
+			{
+				Name:        "org_handle",
+				Description: "The handle of the organization.",
+				Type:        proto.ColumnType_STRING,
+				Hydrate:     getOrgDetails,
 			},
 			{
 				Name:        "status",
@@ -180,4 +190,67 @@ func listOrgMembers(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateD
 	}
 
 	return nil
+}
+
+func getOrganizationMember(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	orgHandle := d.KeyColumnQuals["org_handle"].GetStringValue()
+	userhandle := d.KeyColumnQuals["user_handle"].GetStringValue()
+
+	// check if handle or identityHandle is empty
+	if orgHandle == "" || userhandle == "" {
+		return nil, nil
+	}
+
+	// Create Session
+	svc, err := connect(ctx, d)
+	if err != nil {
+		plugin.Logger(ctx).Error("getOrganizationMember", "connection_error", err)
+		return nil, err
+	}
+
+	var orgUser openapi.OrgUser
+
+	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+		orgUser, _, err = svc.OrgMembers.Get(ctx, orgHandle, userhandle).Execute()
+		return orgUser, err
+	}
+
+	response, err := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
+
+	orgUser = response.(openapi.OrgUser)
+
+	if err != nil {
+		plugin.Logger(ctx).Error("getOrganizationMember", "get", err)
+		return nil, err
+	}
+
+	return orgUser, nil
+}
+
+func getOrgDetails(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	// get org details from hydrate data
+	// org details reside in the parent item in this case
+	switch o := h.ParentItem.(type) {
+	case openapi.Org:
+		return &OrgDetails{OrgHandle: h.ParentItem.(openapi.Org).Handle}, nil
+	default:
+		plugin.Logger(ctx).Debug("getOrgDetails", "Unknown Type", o)
+	}
+
+	// If we are in this section - it means that the org details are not present, so we query for the org
+	// Create Session
+	svc, err := connect(ctx, d)
+	if err != nil {
+		plugin.Logger(ctx).Error("getOrgDetails", "connection_error", err)
+		return nil, err
+	}
+
+	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+		resp, _, err := svc.Orgs.Get(context.Background(), h.Item.(openapi.OrgUser).OrgId).Execute()
+		return resp, err
+	}
+
+	response, err := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
+
+	return &OrgDetails{OrgHandle: response.(openapi.Org).Handle}, nil
 }
