@@ -2,7 +2,6 @@ package steampipecloud
 
 import (
 	"context"
-	"errors"
 
 	openapi "github.com/turbot/steampipe-cloud-sdk-go"
 
@@ -20,12 +19,10 @@ func tableSteampipeCloudOrganizationMember(_ context.Context) *plugin.Table {
 		List: &plugin.ListConfig{
 			ParentHydrate: listOrganizations,
 			Hydrate:       listOrganizationMembers,
-			KeyColumns: []*plugin.KeyColumn{
-				{
-					Name:    "status",
-					Require: plugin.Optional,
-				},
-			},
+		},
+		Get: &plugin.GetConfig{
+			KeyColumns: plugin.AllColumns([]string{"handle"}),
+			Hydrate:    getOrganization,
 		},
 		Columns: []*plugin.Column{
 			{
@@ -77,6 +74,18 @@ func tableSteampipeCloudOrganizationMember(_ context.Context) *plugin.Table {
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
+				Name:        "created_by",
+				Description: "ID of the user who invited the member.",
+				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromField("CreatedById"),
+			},
+			{
+				Name:        "updated_by",
+				Description: "ID of the user who last updated the member.",
+				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromField("UpdatedById"),
+			},
+			{
 				Name:        "version_id",
 				Description: "The current version ID for the member.",
 				Type:        proto.ColumnType_INT,
@@ -89,9 +98,7 @@ func tableSteampipeCloudOrganizationMember(_ context.Context) *plugin.Table {
 //// LIST FUNCTION
 
 func listOrganizationMembers(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-	org := h.Item.(*openapi.Org)
-
-	status := d.KeyColumnQuals["status"].GetStringValue()
+	org := h.Item.(openapi.Org)
 
 	// If the requested number of items is less than the paging max limit
 	// set the limit to that instead
@@ -108,33 +115,24 @@ func listOrganizationMembers(ctx context.Context, d *plugin.QueryData, h *plugin
 	}
 
 	var err error
-	if status == "" {
-		err = listInvitedOrgMembers(ctx, d, h, org.Handle, maxResults)
-		if err != nil {
-			plugin.Logger(ctx).Error("listInvitedOrgMembers", "error", err)
-			return nil, err
-		}
-		err = listAcceptedOrgMembers(ctx, d, h, org.Handle, maxResults)
-	} else if status == "invited" {
-		err = listInvitedOrgMembers(ctx, d, h, org.Handle, maxResults)
-	} else if status == "accepted" {
-		err = listAcceptedOrgMembers(ctx, d, h, org.Handle, maxResults)
-	} else {
-		return nil, errors.New("possible values are: invited and accepted")
+	err = listOrgMembers(ctx, d, h, org.Handle, maxResults)
+	if err != nil {
+		plugin.Logger(ctx).Error("listOrganizationMembers", "error", err)
+		return nil, err
 	}
 
 	if err != nil {
-		plugin.Logger(ctx).Error("listOrganizationMembers", "list", err)
+		plugin.Logger(ctx).Error("listOrganizationMembers", "error", err)
 		return nil, err
 	}
 	return nil, nil
 }
 
-func listAcceptedOrgMembers(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string, maxResults int32) error {
+func listOrgMembers(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string, maxResults int32) error {
 	// Create Session
 	svc, err := connect(ctx, d)
 	if err != nil {
-		plugin.Logger(ctx).Error("listAcceptedOrgMembers", "connection_error", err)
+		plugin.Logger(ctx).Error("listOrgMembers", "connection_error", err)
 		return err
 	}
 
@@ -145,12 +143,12 @@ func listAcceptedOrgMembers(ctx context.Context, d *plugin.QueryData, h *plugin.
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgMembers.ListAccepted(context.Background(), handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
+				resp, _, err = svc.OrgMembers.List(context.Background(), handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgMembers.ListAccepted(context.Background(), handle).Limit(maxResults).Execute()
+				resp, _, err = svc.OrgMembers.List(context.Background(), handle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -158,61 +156,7 @@ func listAcceptedOrgMembers(ctx context.Context, d *plugin.QueryData, h *plugin.
 		response, err := plugin.RetryHydrate(ctx, d, h, listDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
 		if err != nil {
-			plugin.Logger(ctx).Error("listAcceptedOrgMembers", "list", err)
-			return err
-		}
-
-		result := response.(openapi.ListOrgUsersResponse)
-
-		if result.HasItems() {
-			for _, member := range *result.Items {
-				d.StreamListItem(ctx, member)
-
-				// Context can be cancelled due to manual cancellation or the limit has been hit
-				if d.QueryStatus.RowsRemaining(ctx) == 0 {
-					return nil
-				}
-			}
-		}
-		if result.NextToken == nil {
-			pagesLeft = false
-		} else {
-			resp.NextToken = result.NextToken
-		}
-	}
-
-	return nil
-}
-
-func listInvitedOrgMembers(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string, maxResults int32) error {
-	// Create Session
-	svc, err := connect(ctx, d)
-	if err != nil {
-		plugin.Logger(ctx).Error("listInvitedOrgMembers", "connection_error", err)
-		return err
-	}
-
-	pagesLeft := true
-	var resp openapi.ListOrgUsersResponse
-	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
-
-	for pagesLeft {
-		if resp.NextToken != nil {
-			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgMembers.ListInvited(context.Background(), handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
-				return resp, err
-			}
-		} else {
-			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgMembers.ListInvited(context.Background(), handle).Limit(maxResults).Execute()
-				return resp, err
-			}
-		}
-
-		response, err := plugin.RetryHydrate(ctx, d, h, listDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
-
-		if err != nil {
-			plugin.Logger(ctx).Error("listInvitedOrgMembers", "list", err)
+			plugin.Logger(ctx).Error("listOrgMembers", "list", err)
 			return err
 		}
 
