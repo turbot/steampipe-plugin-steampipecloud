@@ -43,15 +43,13 @@ select
   workspace_handle,
   user_handle,
   status,
-  role
+  role 
 from
-  steampipecloud_organization_workspace_member
+  steampipecloud_organization_workspace_member 
 where
-  org_handle = 'testorg'
-and
-  workspace_handle = 'dev'
-and
-  role = 'owner';
+  org_handle = 'testorg' 
+  and workspace_handle = 'dev' 
+  and role = 'owner';
 ```
 
 ### Get details of a particular member in an organization workspace
@@ -63,13 +61,11 @@ select
   workspace_handle,
   user_handle,
   status,
-  role
+  role 
 from
-  steampipecloud_organization_workspace_member
+  steampipecloud_organization_workspace_member 
 where
-  org_handle = 'testorg'
-and
-  workspace_handle = 'dev'
-and
-  user_handle = 'myuser';
+  org_handle = 'testorg' 
+  and workspace_handle = 'dev' 
+  and user_handle = 'myuser';
 ```

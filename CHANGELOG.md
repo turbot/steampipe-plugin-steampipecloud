@@ -7,17 +7,26 @@ _What's new?_
 
 _Enhancements_
 
-- [steampipecloud_organization_workspace_mod](https://hub.steampipe.io/plugins/turbot/steampipecloud/tables/steampipecloud_workspace_mod)
-  - Renamed column `mod_constraint` to `constraint`
-- [steampipecloud_workspace](https://hub.steampipe.io/plugins/turbot/steampipecloud/tables/steampipecloud_workspace)
-  - Renamed column `workspace_state` to `state`
-  - Added columns `created_by`, `updated_by`, `version_id`
-- [steampipecloud_organization_member](https://hub.steampipe.io/plugins/turbot/steampipecloud/tables/steampipecloud_organization_member)
-  - Added columns `created_by`, `updated_by`, `org_handle`
-  - Added Get method to get a particular org member
-- [steampipecloud_organization](https://hub.steampipe.io/plugins/turbot/steampipecloud/tables/steampipecloud_organization)
-  - Added columns `created_by`, `updated_by`
-  - Added Get method to get a particular organization
+- Updated: Rename column `mod_constraint` to `constraint` in `steampipecloud_organization_workspace_mod` table ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
+- Updated: Rename column `workspace_state` to `state` in `steampipecloud_workspace` table ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
+  - workspace_state to state
+- Added the following new columns to `steampipecloud_workspace` table: ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
+  - created_by
+  - updated_by
+  - version_id
+- Added the following new columns to `steampipecloud_organization_member` table: ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
+  - created_by
+  - updated_by
+  - org_handle
+- Added Get method to `steampipecloud_organization_member` table for getting a particular org member ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
+- Added the following new columns to `steampipecloud_organization` table: ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
+  - created_by
+  - updated_by
+- Added Get method to `steampipecloud_organization` table for getting a particular organization ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
+
+_Dependencies_
+
+- Upgraded [steampipe-cloud-sdk-go](https://github.com/turbot/steampipe-cloud-sdk-go/blob/main/CHANGELOG.md#012-2022-07-19) to v0.1.2 ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
 
 ## v0.2.0 [2022-06-09]
 
