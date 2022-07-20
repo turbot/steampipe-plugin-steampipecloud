@@ -132,8 +132,6 @@ func listWorkspaceModVariables(ctx context.Context, d *plugin.QueryData, h *plug
 
 	workspace := h.Item.(openapi.Workspace)
 
-	plugin.Logger(ctx).Trace("listWorkspaceModVariables", "workspace.Id", workspace.Id)
-
 	if workspace.Id != workspaceId {
 		return nil, nil
 	}

@@ -139,8 +139,6 @@ func listOrganizations(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 
 		if result.HasItems() {
 			for _, org := range *result.Items {
-				bytes, _ := json.Marshal(org.Org)
-				plugin.Logger(ctx).Trace("listOrganizations -> Org", string(bytes))
 				d.StreamListItem(ctx, org.Org)
 
 				// Context can be cancelled due to manual cancellation or the limit has been hit
