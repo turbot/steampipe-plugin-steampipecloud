@@ -130,7 +130,7 @@ func listWorkspaceModVariables(ctx context.Context, d *plugin.QueryData, h *plug
 		return nil, nil
 	}
 
-	workspace := h.Item.(openapi.Workspace)
+	workspace := h.Item.(*openapi.Workspace)
 
 	if workspace.Id != workspaceId {
 		return nil, nil

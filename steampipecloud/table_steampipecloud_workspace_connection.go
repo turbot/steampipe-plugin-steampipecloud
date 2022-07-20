@@ -68,7 +68,7 @@ func tableSteampipeCloudWorkspaceConnection(_ context.Context) *plugin.Table {
 //// LIST FUNCTION
 
 func listWorkspaceConnections(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-	workspace := h.Item.(openapi.Workspace)
+	workspace := h.Item.(*openapi.Workspace)
 
 	// Create Session
 	svc, err := connect(ctx, d)

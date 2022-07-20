@@ -11,7 +11,7 @@ select
   id,
   path,
   alias,
-  mod_constraint,
+  constraint,
   installed_version,
   state
 from
@@ -25,7 +25,7 @@ select
   id,
   path,
   alias,
-  mod_constraint,
+  constraint,
   installed_version,
   state
 from
@@ -41,7 +41,7 @@ select
   id,
   path,
   alias,
-  mod_constraint,
+  constraint,
   installed_version,
   state
 from
@@ -57,7 +57,7 @@ select
   swm.id,
   swm.path,
   swm.alias,
-  swm.mod_constraint,
+  swm.constraint,
   swm.installed_version,
   swm.state
 from 

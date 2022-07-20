@@ -39,7 +39,6 @@ func tableSteampipeCloudOrganization(_ context.Context) *plugin.Table {
 				Name:        "display_name",
 				Description: "The display name for the organization.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "avatar_url",
