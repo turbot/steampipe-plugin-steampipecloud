@@ -7,19 +7,10 @@ _What's new?_
 
 _Enhancements_
 
-- Added the following new columns to `steampipecloud_workspace` table: ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
-  - created_by
-  - updated_by
-  - version_id
-- Added the following new columns to `steampipecloud_organization_member` table: ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
-  - created_by
-  - updated_by
-  - org_handle
-- Added Get method to `steampipecloud_organization_member` table for getting a particular org member ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
-- Added the following new columns to `steampipecloud_organization` table: ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
-  - created_by
-  - updated_by
-- Added Get method to `steampipecloud_organization` table for getting a particular organization ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
+- Added `created_by` and `updated_by` columns to the `steampipecloud_organization` table. ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
+- Added `created_by`, `org_handle`, and `updated_by` columns to the `steampipecloud_organization_member` table. ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
+- Added `created_by`, `updated_by`, and `version_id` columns to the `steampipecloud_workspace` table. ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
+- Added `GetConfig` to `steampipecloud_organization` and `steampipecloud_organization_member` tables. ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
 
 _Dependencies_
 
