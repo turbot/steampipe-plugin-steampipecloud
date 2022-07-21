@@ -14,7 +14,7 @@ _Enhancements_
 
 _Dependencies_
 
-- Recompiled plugin with [steampipe-cloud-sdk-go v0.1.2](https://github.com/turbot/steampipe-cloud-sdk-go/blob/main/CHANGELOG.md#012-2022-07-19) ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
+- Recompiled plugin with [steampipe-cloud-sdk-go v0.1.2](https://github.com/turbot/steampipe-cloud-sdk-go/blob/main/CHANGELOG.md#012-2022-07-19). ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
 
 ## v0.2.0 [2022-06-09]
 
