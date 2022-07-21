@@ -11,6 +11,11 @@ import (
 	"github.com/turbot/steampipe-plugin-sdk/v3/plugin/transform"
 )
 
+type IdentityDetails struct {
+	IdentityHandle string `json:"identity_handle"`
+	IdentityType   string `json:"identity_type"`
+}
+
 //// TABLE DEFINITION
 
 func tableSteampipeCloudWorkspace(_ context.Context) *plugin.Table {
@@ -45,6 +50,7 @@ func tableSteampipeCloudWorkspace(_ context.Context) *plugin.Table {
 				Name:        "workspace_state",
 				Description: "The current workspace state.",
 				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromField("State"),
 			},
 			{
 				Name:        "handle",
@@ -55,11 +61,7 @@ func tableSteampipeCloudWorkspace(_ context.Context) *plugin.Table {
 				Name:        "database_name",
 				Description: "The database name for the workspace.",
 				Type:        proto.ColumnType_STRING,
-			},
-			{
-				Name:        "created_at",
-				Description: "The creation time of the workspace.",
-				Type:        proto.ColumnType_TIMESTAMP,
+				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "hive",
@@ -76,24 +78,43 @@ func tableSteampipeCloudWorkspace(_ context.Context) *plugin.Table {
 				Name:        "identity_handle",
 				Description: "The handle name for an identity where the workspace has been created.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromField("Identity.Handle"),
+				Hydrate:     getIdentityDetails,
 			},
 			{
 				Name:        "identity_type",
 				Description: "The type of identity, which can be 'user' or 'org'.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromField("Identity.Type"),
+				Hydrate:     getIdentityDetails,
 			},
 			{
-				Name:        "version_id",
-				Description: "The version ID of the workspace.",
-				Type:        proto.ColumnType_INT,
+				Name:        "created_at",
+				Description: "The creation time of the workspace.",
+				Type:        proto.ColumnType_TIMESTAMP,
 				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "updated_at",
 				Description: "The workspace's last updated time.",
 				Type:        proto.ColumnType_TIMESTAMP,
+				Transform:   transform.FromCamel(),
+			},
+			{
+				Name:        "created_by",
+				Description: "ID of the user who created the workspace.",
+				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromField("CreatedById"),
+			},
+			{
+				Name:        "updated_by",
+				Description: "ID of the user who last updated the workspace.",
+				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromField("UpdatedById"),
+			},
+			{
+				Name:        "version_id",
+				Description: "The version ID of the workspace.",
+				Type:        proto.ColumnType_INT,
+				Transform:   transform.FromCamel(),
 			},
 		},
 	}
@@ -166,12 +187,12 @@ func listUserWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserWorkspaces.List(context.Background(), handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
+				resp, _, err = svc.UserWorkspaces.List(ctx, handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserWorkspaces.List(context.Background(), handle).Limit(maxResults).Execute()
+				resp, _, err = svc.UserWorkspaces.List(ctx, handle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -217,12 +238,12 @@ func listOrgWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgWorkspaces.List(context.Background(), handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
+				resp, _, err = svc.OrgWorkspaces.List(ctx, handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgWorkspaces.List(context.Background(), handle).Limit(maxResults).Execute()
+				resp, _, err = svc.OrgWorkspaces.List(ctx, handle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -262,18 +283,18 @@ func listActorWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.Hyd
 	// execute list call
 	pagesLeft := true
 
-	var resp openapi.ListWorkspacesResponse
+	var resp openapi.ListActorWorkspacesResponse
 	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.Actors.ListWorkspaces(context.Background()).NextToken(*resp.NextToken).Limit(maxResults).Execute()
+				resp, _, err = svc.Actors.ListWorkspaces(ctx).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.Actors.ListWorkspaces(context.Background()).Limit(maxResults).Execute()
+				resp, _, err = svc.Actors.ListWorkspaces(ctx).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -285,11 +306,11 @@ func listActorWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.Hyd
 			return err
 		}
 
-		result := response.(openapi.ListWorkspacesResponse)
+		result := response.(openapi.ListActorWorkspacesResponse)
 
 		if result.HasItems() {
-			for _, workspace := range *result.Items {
-				d.StreamListItem(ctx, workspace)
+			for _, actorWorkspace := range *result.Items {
+				d.StreamListItem(ctx, actorWorkspace.Workspace)
 
 				// Context can be cancelled due to manual cancellation or the limit has been hit
 				if d.QueryStatus.RowsRemaining(ctx) == 0 {
@@ -360,7 +381,7 @@ func getOrgWorkspace(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 	var resp openapi.Workspace
 
 	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-		resp, _, err = svc.OrgWorkspaces.Get(context.Background(), identityHandle, handle).Execute()
+		resp, _, err = svc.OrgWorkspaces.Get(ctx, identityHandle, handle).Execute()
 		return resp, err
 	}
 
@@ -383,7 +404,7 @@ func getUserWorkspace(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
 	var resp openapi.Workspace
 
 	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-		resp, _, err = svc.UserWorkspaces.Get(context.Background(), identityHandle, handle).Execute()
+		resp, _, err = svc.UserWorkspaces.Get(ctx, identityHandle, handle).Execute()
 		return resp, err
 	}
 
@@ -397,4 +418,34 @@ func getUserWorkspace(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
 	}
 
 	return workspace, nil
+}
+
+func getIdentityDetails(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	// Create Session
+	svc, err := connect(ctx, d)
+	if err != nil {
+		plugin.Logger(ctx).Error("getIdentityDetails", "connection_error", err)
+		return nil, err
+	}
+
+	// Get the identity id from the workspace hydrate object
+	var identityId string
+	switch w := h.Item.(type) {
+	case openapi.Workspace:
+		identityId = h.Item.(openapi.Workspace).IdentityId
+	case *openapi.Workspace:
+		identityId = h.Item.(*openapi.Workspace).IdentityId
+	default:
+		plugin.Logger(ctx).Debug("getIdentityDetails", "Unknown Type", w)
+	}
+
+	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+		resp, _, err := svc.Identities.Get(ctx, identityId).Execute()
+		return resp, err
+	}
+
+	response, _ := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
+	identity := response.(openapi.Identity)
+
+	return &IdentityDetails{IdentityHandle: identity.Handle, IdentityType: identity.Type}, nil
 }

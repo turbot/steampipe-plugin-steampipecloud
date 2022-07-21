@@ -107,12 +107,12 @@ func listTokens(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData)
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserTokens.List(context.Background(), user.Handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
+				resp, _, err = svc.UserTokens.List(ctx, user.Handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserTokens.List(context.Background(), user.Handle).Limit(maxResults).Execute()
+				resp, _, err = svc.UserTokens.List(ctx, user.Handle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -169,7 +169,7 @@ func getToken(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (
 	// execute get call
 
 	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-		resp, _, err = svc.UserTokens.Get(context.Background(), id, user.Handle).Execute()
+		resp, _, err = svc.UserTokens.Get(ctx, id, user.Handle).Execute()
 		return resp, err
 	}
 

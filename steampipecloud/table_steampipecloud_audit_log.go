@@ -161,12 +161,12 @@ func listOrgAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.Orgs.ListAuditLogs(context.Background(), handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
+				resp, _, err = svc.Orgs.ListAuditLogs(ctx, handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.Orgs.ListAuditLogs(context.Background(), handle).Limit(maxResults).Execute()
+				resp, _, err = svc.Orgs.ListAuditLogs(ctx, handle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -211,12 +211,12 @@ func listUserAuditLogs(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.Users.ListAuditLogs(context.Background(), handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
+				resp, _, err = svc.Users.ListAuditLogs(ctx, handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.Users.ListAuditLogs(context.Background(), handle).Limit(maxResults).Execute()
+				resp, _, err = svc.Users.ListAuditLogs(ctx, handle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}

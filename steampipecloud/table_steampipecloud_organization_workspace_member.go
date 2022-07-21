@@ -2,6 +2,7 @@ package steampipecloud
 
 import (
 	"context"
+	"strings"
 
 	openapi "github.com/turbot/steampipe-cloud-sdk-go"
 
@@ -10,23 +11,24 @@ import (
 	"github.com/turbot/steampipe-plugin-sdk/v3/plugin/transform"
 )
 
-type OrgDetails struct {
-	OrgHandle string `json:"org_handle"`
+type OrgWorkspaceDetails struct {
+	OrgHandle       string `json:"org_handle"`
+	WorkspaceHandle string `json:"workspace_handle"`
 }
 
 //// TABLE DEFINITION
 
-func tableSteampipeCloudOrganizationMember(_ context.Context) *plugin.Table {
+func tableSteampipeCloudOrganizationWorkspaceMember(_ context.Context) *plugin.Table {
 	return &plugin.Table{
-		Name:        "steampipecloud_organization_member",
-		Description: "Organization members can collaborate and share workspaces and connections.",
+		Name:        "steampipecloud_organization_workspace_member",
+		Description: "Organization workspace members can collaborate and share connections and dashboards.",
 		List: &plugin.ListConfig{
-			ParentHydrate: listOrganizations,
-			Hydrate:       listOrganizationMembers,
+			ParentHydrate: listWorkspaces,
+			Hydrate:       listOrganizationWorkspaceMembers,
 		},
 		Get: &plugin.GetConfig{
-			KeyColumns: plugin.AllColumns([]string{"org_handle", "user_handle"}),
-			Hydrate:    getOrganizationMember,
+			KeyColumns: plugin.AllColumns([]string{"org_handle", "workspace_handle", "user_handle"}),
+			Hydrate:    getOrganizationWorkspaceMember,
 		},
 		Columns: []*plugin.Column{
 			{
@@ -45,7 +47,19 @@ func tableSteampipeCloudOrganizationMember(_ context.Context) *plugin.Table {
 				Name:        "org_handle",
 				Description: "The handle of the organization.",
 				Type:        proto.ColumnType_STRING,
-				Hydrate:     getOrgDetails,
+				Hydrate:     getOrgWorkspaceDetails,
+			},
+			{
+				Name:        "workspace_id",
+				Description: "The unique identifier for the workspace.",
+				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromCamel(),
+			},
+			{
+				Name:        "workspace_handle",
+				Description: "The handle of the workspace.",
+				Type:        proto.ColumnType_STRING,
+				Hydrate:     getOrgWorkspaceDetails,
 			},
 			{
 				Name:        "status",
@@ -71,6 +85,11 @@ func tableSteampipeCloudOrganizationMember(_ context.Context) *plugin.Table {
 			{
 				Name:        "role",
 				Description: "The role of the member.",
+				Type:        proto.ColumnType_STRING,
+			},
+			{
+				Name:        "scope",
+				Description: "The scope of the role. Can be one of org / workspace.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
@@ -107,8 +126,12 @@ func tableSteampipeCloudOrganizationMember(_ context.Context) *plugin.Table {
 
 //// LIST FUNCTION
 
-func listOrganizationMembers(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-	org := h.Item.(openapi.Org)
+func listOrganizationWorkspaceMembers(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	workspace := h.Item.(*openapi.Workspace)
+
+	if strings.HasPrefix(workspace.IdentityId, "u_") {
+		return nil, nil
+	}
 
 	// If the requested number of items is less than the paging max limit
 	// set the limit to that instead
@@ -124,40 +147,40 @@ func listOrganizationMembers(ctx context.Context, d *plugin.QueryData, h *plugin
 		}
 	}
 
-	err := listOrgMembers(ctx, d, h, org.Handle, maxResults)
+	err := listOrgWorkspaceMembers(ctx, d, h, workspace.IdentityId, workspace.Handle, maxResults)
 	if err != nil {
-		plugin.Logger(ctx).Error("listOrganizationMembers", "error", err)
+		plugin.Logger(ctx).Error("listOrganizationWorkspaceMembers", "error", err)
 		return nil, err
 	}
 
 	if err != nil {
-		plugin.Logger(ctx).Error("listOrganizationMembers", "error", err)
+		plugin.Logger(ctx).Error("listOrganizationWorkspaceMembers", "error", err)
 		return nil, err
 	}
 	return nil, nil
 }
 
-func listOrgMembers(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, handle string, maxResults int32) error {
+func listOrgWorkspaceMembers(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, orgHandle string, workspaceHandle string, maxResults int32) error {
 	// Create Session
 	svc, err := connect(ctx, d)
 	if err != nil {
-		plugin.Logger(ctx).Error("listOrgMembers", "connection_error", err)
+		plugin.Logger(ctx).Error("listOrgWorkspaceMembers", "connection_error", err)
 		return err
 	}
 
 	pagesLeft := true
-	var resp openapi.ListOrgUsersResponse
+	var resp openapi.ListOrgWorkspaceUsersResponse
 	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgMembers.List(ctx, handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
+				resp, _, err = svc.OrgWorkspaceMembers.List(ctx, orgHandle, workspaceHandle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgMembers.List(ctx, handle).Limit(maxResults).Execute()
+				resp, _, err = svc.OrgWorkspaceMembers.List(ctx, orgHandle, workspaceHandle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -165,11 +188,11 @@ func listOrgMembers(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateD
 		response, err := plugin.RetryHydrate(ctx, d, h, listDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
 		if err != nil {
-			plugin.Logger(ctx).Error("listOrgMembers", "list", err)
+			plugin.Logger(ctx).Error("listOrgWorkspaceMembers", "list", err)
 			return err
 		}
 
-		result := response.(openapi.ListOrgUsersResponse)
+		result := response.(openapi.ListOrgWorkspaceUsersResponse)
 
 		if result.HasItems() {
 			for _, member := range *result.Items {
@@ -191,52 +214,43 @@ func listOrgMembers(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateD
 	return nil
 }
 
-func getOrganizationMember(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+func getOrganizationWorkspaceMember(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	orgHandle := d.KeyColumnQuals["org_handle"].GetStringValue()
+	workspaceHandle := d.KeyColumnQuals["workspace_handle"].GetStringValue()
 	userhandle := d.KeyColumnQuals["user_handle"].GetStringValue()
 
 	// check if handle or identityHandle is empty
-	if orgHandle == "" || userhandle == "" {
+	if orgHandle == "" || workspaceHandle == "" || userhandle == "" {
 		return nil, nil
 	}
 
 	// Create Session
 	svc, err := connect(ctx, d)
 	if err != nil {
-		plugin.Logger(ctx).Error("getOrganizationMember", "connection_error", err)
+		plugin.Logger(ctx).Error("getOrganizationWorkspaceMember", "connection_error", err)
 		return nil, err
 	}
 
-	var orgUser openapi.OrgUser
+	var orgWorkspaceUser openapi.OrgWorkspaceUser
 
 	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-		orgUser, _, err = svc.OrgMembers.Get(ctx, orgHandle, userhandle).Execute()
-		return orgUser, err
+		orgWorkspaceUser, _, err = svc.OrgWorkspaceMembers.Get(ctx, orgHandle, workspaceHandle, userhandle).Execute()
+		return orgWorkspaceUser, err
 	}
 
 	response, err := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
-	orgUser = response.(openapi.OrgUser)
+	orgWorkspaceUser = response.(openapi.OrgWorkspaceUser)
 
 	if err != nil {
-		plugin.Logger(ctx).Error("getOrganizationMember", "get", err)
+		plugin.Logger(ctx).Error("getOrganizationWorkspaceMember", "get", err)
 		return nil, err
 	}
 
-	return orgUser, nil
+	return orgWorkspaceUser, nil
 }
 
-func getOrgDetails(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-	// get org details from hydrate data
-	// org details reside in the parent item in this case
-	switch o := h.ParentItem.(type) {
-	case openapi.Org:
-		return &OrgDetails{OrgHandle: h.ParentItem.(openapi.Org).Handle}, nil
-	default:
-		plugin.Logger(ctx).Debug("getOrgDetails", "Unknown Type", o)
-	}
-
-	// If we are in this section - it means that the org details are not present, so we query for the org
+func getOrgWorkspaceDetails(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	// Create Session
 	svc, err := connect(ctx, d)
 	if err != nil {
@@ -244,12 +258,25 @@ func getOrgDetails(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDa
 		return nil, err
 	}
 
-	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-		resp, _, err := svc.Orgs.Get(ctx, h.Item.(openapi.OrgUser).OrgId).Execute()
-		return resp, err
+	// get workspace details from hydrate data
+	// workspace details reside in the parent item in this case
+	switch w := h.ParentItem.(type) {
+	case openapi.Workspace:
+		getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+			resp, _, err := svc.Orgs.Get(ctx, h.ParentItem.(openapi.Workspace).IdentityId).Execute()
+			return resp, err
+		}
+		response, _ := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
+		return &OrgWorkspaceDetails{OrgHandle: response.(openapi.Org).Handle, WorkspaceHandle: w.Handle}, nil
+	default:
+		plugin.Logger(ctx).Debug("getOrgDetails", "Unknown Type", w)
 	}
 
+	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+		resp, _, err := svc.Orgs.Get(ctx, h.Item.(openapi.OrgWorkspaceUser).OrgId).Execute()
+		return resp, err
+	}
 	response, _ := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
-	return &OrgDetails{OrgHandle: response.(openapi.Org).Handle}, nil
+	return &OrgWorkspaceDetails{OrgHandle: response.(openapi.Org).Handle, WorkspaceHandle: h.Item.(openapi.OrgWorkspaceUser).WorkspaceHandle}, nil
 }

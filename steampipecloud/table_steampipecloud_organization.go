@@ -19,6 +19,10 @@ func tableSteampipeCloudOrganization(_ context.Context) *plugin.Table {
 		List: &plugin.ListConfig{
 			Hydrate: listOrganizations,
 		},
+		Get: &plugin.GetConfig{
+			KeyColumns: plugin.AllColumns([]string{"handle"}),
+			Hydrate:    getOrganization,
+		},
 		Columns: []*plugin.Column{
 			{
 				Name:        "id",
@@ -40,6 +44,7 @@ func tableSteampipeCloudOrganization(_ context.Context) *plugin.Table {
 				Name:        "avatar_url",
 				Description: "The avatar URL of the organization.",
 				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "url",
@@ -52,15 +57,27 @@ func tableSteampipeCloudOrganization(_ context.Context) *plugin.Table {
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
+				Name:        "updated_at",
+				Description: "The organization's last updated time.",
+				Type:        proto.ColumnType_TIMESTAMP,
+			},
+			{
+				Name:        "created_by",
+				Description: "ID of the user who created the organization.",
+				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromField("CreatedById"),
+			},
+			{
+				Name:        "updated_by",
+				Description: "ID of the user who last updated the organization.",
+				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromField("UpdatedById"),
+			},
+			{
 				Name:        "version_id",
 				Description: "The organization version ID.",
 				Type:        proto.ColumnType_INT,
 				Transform:   transform.FromCamel(),
-			},
-			{
-				Name:        "updated_at",
-				Description: "The organization's last updated time.",
-				Type:        proto.ColumnType_TIMESTAMP,
 			},
 		},
 	}
@@ -75,15 +92,6 @@ func listOrganizations(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 		plugin.Logger(ctx).Error("listOrganizations", "connection_error", err)
 		return nil, err
 	}
-
-	getUserIdentityCached := plugin.HydrateFunc(getUserIdentity).WithCache()
-	commonData, err := getUserIdentityCached(ctx, d, h)
-	if err != nil {
-		plugin.Logger(ctx).Error("listOrganizations", "getUserIdentityCached", err)
-		return nil, err
-	}
-
-	user := commonData.(openapi.User)
 
 	// If the requested number of items is less than the paging max limit
 	// set the limit to that instead
@@ -102,18 +110,18 @@ func listOrganizations(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 	// execute list call
 	pagesLeft := true
 
-	var resp openapi.ListUserOrgsResponse
+	var resp openapi.ListActorOrgsResponse
 	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.Users.ListOrgs(context.Background(), user.Handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
+				resp, _, err = svc.Actors.ListOrgs(ctx).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.Users.ListOrgs(context.Background(), user.Handle).Limit(maxResults).Execute()
+				resp, _, err = svc.Actors.ListOrgs(ctx).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -125,7 +133,7 @@ func listOrganizations(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 			return nil, err
 		}
 
-		result := response.(openapi.ListUserOrgsResponse)
+		result := response.(openapi.ListActorOrgsResponse)
 
 		if result.HasItems() {
 			for _, org := range *result.Items {
@@ -146,4 +154,39 @@ func listOrganizations(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 	}
 
 	return nil, nil
+}
+
+func getOrganization(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	handle := d.KeyColumnQuals["handle"].GetStringValue()
+
+	// check if handle is empty
+	if handle == "" {
+		return nil, nil
+	}
+
+	// Create Session
+	svc, err := connect(ctx, d)
+	if err != nil {
+		plugin.Logger(ctx).Error("getOrganization", "connection_error", err)
+		return nil, err
+	}
+
+	var resp openapi.Org
+
+	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+		resp, _, err = svc.Orgs.Get(ctx, handle).Execute()
+		return resp, err
+	}
+
+	response, err := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
+	if err != nil {
+		plugin.Logger(ctx).Error("getOrganization", "get", err)
+		return nil, err
+	}
+
+	if response == nil {
+		return nil, nil
+	}
+
+	return response.(openapi.Org), nil
 }

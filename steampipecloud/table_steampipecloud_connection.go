@@ -165,12 +165,12 @@ func listOrgConnections(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgConnections.List(context.Background(), handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
+				resp, _, err = svc.OrgConnections.List(ctx, handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgConnections.List(context.Background(), handle).Limit(maxResults).Execute()
+				resp, _, err = svc.OrgConnections.List(ctx, handle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -213,12 +213,12 @@ func listUserConnections(ctx context.Context, d *plugin.QueryData, h *plugin.Hyd
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserConnections.List(context.Background(), handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
+				resp, _, err = svc.UserConnections.List(ctx, handle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserConnections.List(context.Background(), handle).Limit(maxResults).Execute()
+				resp, _, err = svc.UserConnections.List(ctx, handle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -262,12 +262,12 @@ func listActorConnections(ctx context.Context, d *plugin.QueryData, h *plugin.Hy
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.Actors.ListConnections(context.Background()).NextToken(*resp.NextToken).Limit(maxResults).Execute()
+				resp, _, err = svc.Actors.ListConnections(ctx).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.Actors.ListConnections(context.Background()).Limit(maxResults).Execute()
+				resp, _, err = svc.Actors.ListConnections(ctx).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -354,7 +354,7 @@ func getOrgConnection(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
 	var resp openapi.Connection
 
 	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-		resp, _, err = svc.OrgConnections.Get(context.Background(), identityHandle, handle).Execute()
+		resp, _, err = svc.OrgConnections.Get(ctx, identityHandle, handle).Execute()
 		return resp, err
 	}
 
@@ -377,7 +377,7 @@ func getUserConnection(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 	var resp openapi.Connection
 
 	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-		resp, _, err = svc.UserConnections.Get(context.Background(), identityHandle, handle).Execute()
+		resp, _, err = svc.UserConnections.Get(ctx, identityHandle, handle).Execute()
 		return resp, err
 	}
 

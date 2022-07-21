@@ -1,3 +1,21 @@
+## v0.3.0 [2022-07-20]
+
+_What's new?_
+
+- New tables added
+  - [steampipecloud_organization_workspace_member](https://hub.steampipe.io/plugins/turbot/steampipecloud/tables/steampipecloud_organization_workspace_member) ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
+
+_Enhancements_
+
+- Added `created_by` and `updated_by` columns to the `steampipecloud_organization` table. ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
+- Added `created_by`, `org_handle`, and `updated_by` columns to the `steampipecloud_organization_member` table. ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
+- Added `created_by`, `updated_by`, and `version_id` columns to the `steampipecloud_workspace` table. ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
+- Added `GetConfig` to `steampipecloud_organization` and `steampipecloud_organization_member` tables. ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
+
+_Dependencies_
+
+- Recompiled plugin with [steampipe-cloud-sdk-go v0.1.2](https://github.com/turbot/steampipe-cloud-sdk-go/blob/main/CHANGELOG.md#012-2022-07-19). ([#19](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/19))
+
 ## v0.2.0 [2022-06-09]
 
 _What's new?_

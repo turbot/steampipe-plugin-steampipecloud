@@ -68,7 +68,7 @@ func tableSteampipeCloudWorkspaceConnection(_ context.Context) *plugin.Table {
 //// LIST FUNCTION
 
 func listWorkspaceConnections(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-	workspace := h.Item.(openapi.Workspace)
+	workspace := h.Item.(*openapi.Workspace)
 
 	// Create Session
 	svc, err := connect(ctx, d)
@@ -100,10 +100,10 @@ func listWorkspaceConnections(ctx context.Context, d *plugin.QueryData, h *plugi
 		}
 	}
 
-	if workspace.Identity.Handle == user.Handle {
+	if workspace.IdentityId == user.Id {
 		err = listUserWorkspaceConnectionAssociations(ctx, d, h, user.Handle, workspace.Handle, svc, maxResults)
 	} else {
-		err = listOrgWorkspaceConnectionAssociations(ctx, d, h, workspace.Identity.Handle, workspace.Handle, svc, maxResults)
+		err = listOrgWorkspaceConnectionAssociations(ctx, d, h, workspace.IdentityId, workspace.Handle, svc, maxResults)
 	}
 
 	if err != nil {
@@ -124,12 +124,12 @@ func listUserWorkspaceConnectionAssociations(ctx context.Context, d *plugin.Quer
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserWorkspaceConnectionAssociations.List(context.Background(), userHandle, workspaceHandle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
+				resp, _, err = svc.UserWorkspaceConnectionAssociations.List(ctx, userHandle, workspaceHandle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserWorkspaceConnectionAssociations.List(context.Background(), userHandle, workspaceHandle).Limit(maxResults).Execute()
+				resp, _, err = svc.UserWorkspaceConnectionAssociations.List(ctx, userHandle, workspaceHandle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -174,12 +174,12 @@ func listOrgWorkspaceConnectionAssociations(ctx context.Context, d *plugin.Query
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgWorkspaceConnectionAssociations.List(context.Background(), orgHandle, workspaceHandle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
+				resp, _, err = svc.OrgWorkspaceConnectionAssociations.List(ctx, orgHandle, workspaceHandle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgWorkspaceConnectionAssociations.List(context.Background(), orgHandle, workspaceHandle).Limit(maxResults).Execute()
+				resp, _, err = svc.OrgWorkspaceConnectionAssociations.List(ctx, orgHandle, workspaceHandle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
