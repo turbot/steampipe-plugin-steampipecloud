@@ -56,7 +56,6 @@ func tableSteampipeCloudWorkspace(_ context.Context) *plugin.Table {
 				Name:        "handle",
 				Description: "The handle name for the workspace.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "database_name",
