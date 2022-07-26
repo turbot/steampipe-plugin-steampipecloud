@@ -451,7 +451,7 @@ func getSnapshotData(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 	// Create Session
 	svc, err := connect(ctx, d)
 	if err != nil {
-		plugin.Logger(ctx).Error("getIdentityWorkspaceDetails", "connection_error", err)
+		plugin.Logger(ctx).Error("getSnapshotData", "connection_error", err)
 		return nil, err
 	}
 
@@ -460,12 +460,13 @@ func getSnapshotData(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 	var response openapi.WorkspaceSnapshotData
 	getSnapshotData := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 		if strings.HasPrefix(workspaceSnapshot.IdentityId, "u_") {
-			response, _, err = svc.UserWorkspaceSnapshots.Download(ctx, workspaceSnapshot.IdentityId, workspaceSnapshot.WorkspaceId, workspaceSnapshot.Id).Execute()
+			response, _, err = svc.UserWorkspaceSnapshots.Download(ctx, workspaceSnapshot.IdentityId, workspaceSnapshot.WorkspaceId, workspaceSnapshot.Id, "json").Execute()
 			if err != nil {
 				return nil, err
 			}
+
 		} else {
-			response, _, err = svc.OrgWorkspaceSnapshots.Download(ctx, workspaceSnapshot.IdentityId, workspaceSnapshot.WorkspaceId, workspaceSnapshot.Id).Execute()
+			response, _, err = svc.OrgWorkspaceSnapshots.Download(ctx, workspaceSnapshot.IdentityId, workspaceSnapshot.WorkspaceId, workspaceSnapshot.Id, "json").Execute()
 			if err != nil {
 				return nil, err
 			}
