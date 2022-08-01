@@ -3,7 +3,9 @@ package steampipecloud
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
+	"time"
 
 	openapi "github.com/turbot/steampipe-cloud-sdk-go"
 
@@ -31,6 +33,48 @@ func tableSteampipeCloudWorkspaceSnapshot(_ context.Context) *plugin.Table {
 		List: &plugin.ListConfig{
 			ParentHydrate: listWorkspaces,
 			Hydrate:       listWorkspaceSnapshots,
+			KeyColumns: []*plugin.KeyColumn{
+				{
+					Name:      "identity_id",
+					Require:   plugin.Optional,
+					Operators: []string{"=", "<>"},
+				},
+				{
+					Name:      "workspace_id",
+					Require:   plugin.Optional,
+					Operators: []string{"=", "<>"},
+				},
+				{
+					Name:      "state",
+					Require:   plugin.Optional,
+					Operators: []string{"=", "<>"},
+				},
+				{
+					Name:      "visibility",
+					Require:   plugin.Optional,
+					Operators: []string{"=", "<>"},
+				},
+				{
+					Name:      "dashboard_name",
+					Require:   plugin.Optional,
+					Operators: []string{"=", "<>"},
+				},
+				{
+					Name:      "schema_version",
+					Require:   plugin.Optional,
+					Operators: []string{"=", "<>"},
+				},
+				{
+					Name:      "start_time",
+					Require:   plugin.Optional,
+					Operators: []string{">", ">=", "=", "<", "<="},
+				},
+				{
+					Name:      "end_time",
+					Require:   plugin.Optional,
+					Operators: []string{">", ">=", "=", "<", "<="},
+				},
+			},
 		},
 		Get: &plugin.GetConfig{
 			KeyColumns: plugin.AllColumns([]string{"identity_handle", "workspace_handle", "id"}),
@@ -123,7 +167,7 @@ func tableSteampipeCloudWorkspaceSnapshot(_ context.Context) *plugin.Table {
 				Name:        "data",
 				Description: "The data for snapshot.",
 				Type:        proto.ColumnType_JSON,
-				Hydrate:     getSnapshotData,
+				// Hydrate:     getSnapshotData,
 			},
 			{
 				Name:        "created_at",
@@ -160,7 +204,16 @@ func tableSteampipeCloudWorkspaceSnapshot(_ context.Context) *plugin.Table {
 //// LIST FUNCTION
 
 func listWorkspaceSnapshots(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-	workspace := h.Item.(*openapi.Workspace)
+	var workspace *openapi.Workspace
+	switch w := h.Item.(type) {
+	case openapi.Workspace:
+		wo := h.Item.(openapi.Workspace)
+		workspace = &wo
+	case *openapi.Workspace:
+		workspace = h.Item.(*openapi.Workspace)
+	default:
+		plugin.Logger(ctx).Error("listWorkspaceSnapshots", "unknown response type for workspace list parent hydrate call", w)
+	}
 
 	// If the requested number of items is less than the paging max limit
 	// set the limit to that instead
@@ -199,6 +252,41 @@ func listUserWorkspaceSnapshots(ctx context.Context, d *plugin.QueryData, h *plu
 		return err
 	}
 
+	var clauses []string
+	for _, keyQual := range d.Table.List.KeyColumns {
+		filterQual := d.Quals[keyQual.Name]
+		if filterQual == nil {
+			continue
+		}
+		for _, qual := range filterQual.Quals {
+			if qual.Value != nil {
+				var value string
+				if keyQual.Name == "start_time" || keyQual.Name == "end_time" {
+					t := time.Unix(qual.Value.GetTimestampValue().Seconds, int64(qual.Value.GetTimestampValue().Nanos)).UTC()
+					value = t.Format("2006-01-02 15:04:05.00000")
+				} else {
+					value = qual.Value.GetStringValue()
+				}
+				switch qual.Operator {
+				case "=":
+					clauses = append(clauses, fmt.Sprintf(`%s = '%s'`, keyQual.Name, value))
+				case "<>":
+					clauses = append(clauses, fmt.Sprintf(`%s <> '%s'`, keyQual.Name, value))
+				case ">":
+					clauses = append(clauses, fmt.Sprintf(`%s > '%s'`, keyQual.Name, value))
+				case ">=":
+					clauses = append(clauses, fmt.Sprintf(`%s >= '%s'`, keyQual.Name, value))
+				case "<":
+					clauses = append(clauses, fmt.Sprintf(`%s < '%s'`, keyQual.Name, value))
+				case "<=":
+					clauses = append(clauses, fmt.Sprintf(`%s <= '%s'`, keyQual.Name, value))
+				}
+			}
+		}
+	}
+
+	filter := strings.Join(clauses, " and ")
+
 	pagesLeft := true
 	var resp openapi.ListWorkspaceSnapshotsResponse
 	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
@@ -206,12 +294,12 @@ func listUserWorkspaceSnapshots(ctx context.Context, d *plugin.QueryData, h *plu
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserWorkspaceSnapshots.List(ctx, userHandle, workspaceHandle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
+				resp, _, err = svc.UserWorkspaceSnapshots.List(ctx, userHandle, workspaceHandle).Where(filter).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserWorkspaceSnapshots.List(ctx, userHandle, workspaceHandle).Limit(maxResults).Execute()
+				resp, _, err = svc.UserWorkspaceSnapshots.List(ctx, userHandle, workspaceHandle).Where(filter).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
