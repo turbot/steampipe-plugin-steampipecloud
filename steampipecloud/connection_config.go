@@ -53,10 +53,6 @@ func connect(_ context.Context, d *plugin.QueryData) (*openapiclient.APIClient, 
 
 	configuration := openapiclient.NewConfiguration()
 	configuration.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", token))
-	// tr := &http.Transport{
-	// 	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	// }
-	// configuration.HTTPClient = &http.Client{Transport: tr}
 
 	host := os.Getenv("STEAMPIPE_CLOUD_HOST")
 	if steampipecloudConfig.Host != nil {
