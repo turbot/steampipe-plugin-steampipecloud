@@ -62,8 +62,8 @@ func tableSteampipeCloudWorkspaceDbLog(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:        "duration",
-				Description: "The duration of the query.",
-				Type:        proto.ColumnType_STRING,
+				Description: "The duration of the query in milliseconds(ms).",
+				Type:        proto.ColumnType_DOUBLE,
 				Transform:   transform.FromCamel(),
 			},
 			{
