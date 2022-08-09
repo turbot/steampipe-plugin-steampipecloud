@@ -74,6 +74,11 @@ func tableSteampipeCloudWorkspaceSnapshot(_ context.Context) *plugin.Table {
 					Require:   plugin.Optional,
 					Operators: []string{">", ">=", "=", "<", "<="},
 				},
+				{
+					Name:       "query_where",
+					Require:    plugin.Optional,
+					CacheMatch: "exact",
+				},
 			},
 		},
 		Get: &plugin.GetConfig{
@@ -170,6 +175,12 @@ func tableSteampipeCloudWorkspaceSnapshot(_ context.Context) *plugin.Table {
 				Hydrate:     getSnapshotData,
 			},
 			{
+				Name:        "query_where",
+				Description: "The query where expression to filter snapshots.",
+				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromQual("query_where"),
+			},
+			{
 				Name:        "created_at",
 				Description: "The time when the snapshot was created.",
 				Type:        proto.ColumnType_TIMESTAMP,
@@ -260,40 +271,47 @@ func listUserWorkspaceSnapshots(ctx context.Context, d *plugin.QueryData, h *plu
 		return err
 	}
 
-	var clauses []string
-	for _, keyQual := range d.Table.List.KeyColumns {
-		filterQual := d.Quals[keyQual.Name]
-		if filterQual == nil {
-			continue
-		}
-		for _, qual := range filterQual.Quals {
-			if qual.Value != nil {
-				var value string
-				if keyQual.Name == "start_time" || keyQual.Name == "end_time" {
-					t := time.Unix(qual.Value.GetTimestampValue().Seconds, int64(qual.Value.GetTimestampValue().Nanos)).UTC()
-					value = t.Format("2006-01-02 15:04:05.00000")
-				} else {
-					value = qual.Value.GetStringValue()
-				}
-				switch qual.Operator {
-				case "=":
-					clauses = append(clauses, fmt.Sprintf(`%s = '%s'`, keyQual.Name, value))
-				case "<>":
-					clauses = append(clauses, fmt.Sprintf(`%s <> '%s'`, keyQual.Name, value))
-				case ">":
-					clauses = append(clauses, fmt.Sprintf(`%s > '%s'`, keyQual.Name, value))
-				case ">=":
-					clauses = append(clauses, fmt.Sprintf(`%s >= '%s'`, keyQual.Name, value))
-				case "<":
-					clauses = append(clauses, fmt.Sprintf(`%s < '%s'`, keyQual.Name, value))
-				case "<=":
-					clauses = append(clauses, fmt.Sprintf(`%s <= '%s'`, keyQual.Name, value))
+	var filter string
+	// If query_where is passed in the query, that takes precedence
+	// we will not evaluate the other quals
+	if d.KeyColumnQuals["query_where"] != nil {
+		filter = d.KeyColumnQuals["query_where"].GetStringValue()
+	} else {
+		var clauses []string
+		for _, keyQual := range d.Table.List.KeyColumns {
+			filterQual := d.Quals[keyQual.Name]
+			if filterQual == nil {
+				continue
+			}
+			for _, qual := range filterQual.Quals {
+				if qual.Value != nil {
+					var value string
+					if keyQual.Name == "start_time" || keyQual.Name == "end_time" {
+						t := time.Unix(qual.Value.GetTimestampValue().Seconds, int64(qual.Value.GetTimestampValue().Nanos)).UTC()
+						value = t.Format("2006-01-02 15:04:05.00000")
+					} else {
+						value = qual.Value.GetStringValue()
+					}
+					switch qual.Operator {
+					case "=":
+						clauses = append(clauses, fmt.Sprintf(`%s = '%s'`, keyQual.Name, value))
+					case "<>":
+						clauses = append(clauses, fmt.Sprintf(`%s <> '%s'`, keyQual.Name, value))
+					case ">":
+						clauses = append(clauses, fmt.Sprintf(`%s > '%s'`, keyQual.Name, value))
+					case ">=":
+						clauses = append(clauses, fmt.Sprintf(`%s >= '%s'`, keyQual.Name, value))
+					case "<":
+						clauses = append(clauses, fmt.Sprintf(`%s < '%s'`, keyQual.Name, value))
+					case "<=":
+						clauses = append(clauses, fmt.Sprintf(`%s <= '%s'`, keyQual.Name, value))
+					}
 				}
 			}
 		}
-	}
 
-	filter := strings.Join(clauses, " and ")
+		filter = strings.Join(clauses, " and ")
+	}
 
 	pagesLeft := true
 	var resp openapi.ListWorkspaceSnapshotsResponse
