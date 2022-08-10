@@ -2,6 +2,7 @@ package steampipecloud
 
 import (
 	"context"
+	"strings"
 
 	openapi "github.com/turbot/steampipe-cloud-sdk-go"
 
@@ -9,6 +10,12 @@ import (
 	"github.com/turbot/steampipe-plugin-sdk/v3/plugin"
 	"github.com/turbot/steampipe-plugin-sdk/v3/plugin/transform"
 )
+
+type IdentityWorkspaceDetailsForWorkspaceMod struct {
+	IdentityHandle  string `json:"identity_handle"`
+	IdentityType    string `json:"identity_type"`
+	WorkspaceHandle string `json:"workspace_handle"`
+}
 
 //// TABLE DEFINITION
 
@@ -32,34 +39,44 @@ func tableSteampipeCloudWorkspaceMod(_ context.Context) *plugin.Table {
 				Transform:   transform.FromCamel(),
 			},
 			{
+				Name:        "identity_id",
+				Description: "The unique identifier for the identity which contains the workspace.",
+				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromCamel(),
+			},
+			{
+				Name:        "identity_handle",
+				Description: "The handle of the identity which contains the workspace.",
+				Type:        proto.ColumnType_STRING,
+				Hydrate:     getIdentityWorkspaceDetailsForWorkspaceMod,
+			},
+			{
+				Name:        "identity_type",
+				Description: "The type of identity, which can be 'user' or 'org'.",
+				Type:        proto.ColumnType_STRING,
+				Hydrate:     getIdentityWorkspaceDetailsForWorkspaceMod,
+			},
+			{
 				Name:        "workspace_id",
 				Description: "The unique identifier for the workspace.",
 				Type:        proto.ColumnType_STRING,
 				Transform:   transform.FromCamel(),
 			},
 			{
-				Name:        "identity_id",
-				Description: "The unique identifier for the identity who installed the mod.",
+				Name:        "workspace_handle",
+				Description: "The handle for the workspace.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromCamel(),
+				Hydrate:     getIdentityWorkspaceDetailsForWorkspaceMod,
 			},
 			{
-				Name:        "identity_type",
-				Description: "The type of identity, which can be 'user' or 'org'.",
-				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromField("Workspace.Identity.Type"),
-			},
-			{
-				Name:        "mod_constraint",
+				Name:        "constraint",
 				Description: "Version constraint for the mod.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromField("Constraint"),
 			},
 			{
 				Name:        "alias",
 				Description: "Short name used to identify the mod.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "installed_version",
@@ -68,20 +85,9 @@ func tableSteampipeCloudWorkspaceMod(_ context.Context) *plugin.Table {
 				Transform:   transform.FromCamel(),
 			},
 			{
-				Name:        "created_at",
-				Description: "Time when the mod was installed.",
-				Type:        proto.ColumnType_TIMESTAMP,
-			},
-			{
-				Name:        "updated_at",
-				Description: "Time when the mod was updated.",
-				Type:        proto.ColumnType_TIMESTAMP,
-			},
-			{
 				Name:        "state",
 				Description: "State of the mod. Can be one of 'installing', 'installed' or 'error'.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "path",
@@ -93,6 +99,44 @@ func tableSteampipeCloudWorkspaceMod(_ context.Context) *plugin.Table {
 				Name:        "details",
 				Description: "Extra stored details about the mod.",
 				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromCamel(),
+			},
+			{
+				Name:        "created_at",
+				Description: "The time when the mod was installed.",
+				Type:        proto.ColumnType_TIMESTAMP,
+			},
+			{
+				Name:        "created_by_id",
+				Description: "The unique identifier of the user who installed the mod.",
+				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromCamel(),
+			},
+			{
+				Name:        "created_by",
+				Description: "Information about the user who installed the mod.",
+				Type:        proto.ColumnType_JSON,
+			},
+			{
+				Name:        "updated_at",
+				Description: "The time when the mod was last updated.",
+				Type:        proto.ColumnType_TIMESTAMP,
+			},
+			{
+				Name:        "updated_by_id",
+				Description: "The unique identifier of the user who last updated the mod.",
+				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromCamel(),
+			},
+			{
+				Name:        "updated_by",
+				Description: "Information about the user who last updated the mod.",
+				Type:        proto.ColumnType_JSON,
+			},
+			{
+				Name:        "version_id",
+				Description: "The current version ID of the mod record.",
+				Type:        proto.ColumnType_INT,
 				Transform:   transform.FromCamel(),
 			},
 		},
@@ -179,8 +223,6 @@ func listUserWorkspaceMods(ctx context.Context, d *plugin.QueryData, h *plugin.H
 
 		if result.HasItems() {
 			for _, workspaceMod := range *result.Items {
-				workspaceMod.Workspace = &openapi.Workspace{}
-				workspaceMod.Workspace.Handle = workspaceHandle
 				d.StreamListItem(ctx, workspaceMod)
 
 				// Context can be cancelled due to manual cancellation or the limit has been hit
@@ -231,8 +273,6 @@ func listOrgWorkspaceMods(ctx context.Context, d *plugin.QueryData, h *plugin.Hy
 
 		if result.HasItems() {
 			for _, workspaceMod := range *result.Items {
-				workspaceMod.Workspace = &openapi.Workspace{}
-				workspaceMod.Workspace.Handle = workspaceHandle
 				d.StreamListItem(ctx, workspaceMod)
 
 				// Context can be cancelled due to manual cancellation or the limit has been hit
@@ -312,7 +352,6 @@ func getUserWorkspaceMod(ctx context.Context, d *plugin.QueryData, h *plugin.Hyd
 	response, err := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
 	workspaceMod := response.(openapi.WorkspaceMod)
-	workspaceMod.Workspace = &openapi.Workspace{}
 
 	if err != nil {
 		plugin.Logger(ctx).Error("getUserWorkspaceMod", "get", err)
@@ -336,7 +375,6 @@ func getOrgWorkspaceMod(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 	response, err := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
 	workspaceMod := response.(openapi.WorkspaceMod)
-	workspaceMod.Workspace = &openapi.Workspace{}
 
 	if err != nil {
 		plugin.Logger(ctx).Error("getOrgWorkspaceMod", "get", err)
@@ -344,4 +382,71 @@ func getOrgWorkspaceMod(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 	}
 
 	return workspaceMod, nil
+}
+
+func getIdentityWorkspaceDetailsForWorkspaceMod(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	// Create Session
+	svc, err := connect(ctx, d)
+	if err != nil {
+		plugin.Logger(ctx).Error("getIdentityWorkspaceDetailsForWorkspaceMod", "connection_error", err)
+		return nil, err
+	}
+
+	var identityWorkspaceDetails IdentityWorkspaceDetailsForWorkspaceMod
+	// get workspace details from hydrate data
+	// workspace details reside in the parent item in this case
+	switch w := h.ParentItem.(type) {
+	case openapi.Workspace:
+		identityId := h.ParentItem.(openapi.Workspace).IdentityId
+		identityWorkspaceDetails.WorkspaceHandle = h.ParentItem.(openapi.Workspace).Handle
+		getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+			if strings.HasPrefix(identityId, "u_") {
+				resp, _, err := svc.Users.Get(ctx, identityId).Execute()
+				identityWorkspaceDetails.IdentityType = "user"
+				identityWorkspaceDetails.IdentityHandle = resp.Handle
+				return nil, err
+			} else {
+				resp, _, err := svc.Orgs.Get(ctx, identityId).Execute()
+				identityWorkspaceDetails.IdentityType = "org"
+				identityWorkspaceDetails.IdentityHandle = resp.Handle
+				return nil, err
+			}
+		}
+		_, _ = plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
+		return identityWorkspaceDetails, nil
+	default:
+		plugin.Logger(ctx).Debug("getIdentityWorkspaceDetailsForWorkspaceMod", "Unknown Type", w)
+	}
+
+	identityId := h.Item.(openapi.WorkspaceMod).IdentityId
+	workspaceId := h.Item.(openapi.WorkspaceMod).WorkspaceId
+	getIdentityDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+		if strings.HasPrefix(identityId, "u_") {
+			resp, _, err := svc.Users.Get(ctx, identityId).Execute()
+			identityWorkspaceDetails.IdentityType = "user"
+			identityWorkspaceDetails.IdentityHandle = resp.Handle
+			return nil, err
+		} else {
+			resp, _, err := svc.Orgs.Get(ctx, identityId).Execute()
+			identityWorkspaceDetails.IdentityType = "org"
+			identityWorkspaceDetails.IdentityHandle = resp.Handle
+			return nil, err
+		}
+	}
+	_, _ = plugin.RetryHydrate(ctx, d, h, getIdentityDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
+
+	getWorkspaceDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+		if strings.HasPrefix(identityId, "u_") {
+			resp, _, err := svc.UserWorkspaces.Get(ctx, identityId, workspaceId).Execute()
+			identityWorkspaceDetails.WorkspaceHandle = resp.Handle
+			return nil, err
+		} else {
+			resp, _, err := svc.OrgWorkspaces.Get(ctx, identityId, workspaceId).Execute()
+			identityWorkspaceDetails.WorkspaceHandle = resp.Handle
+			return nil, err
+		}
+	}
+	_, _ = plugin.RetryHydrate(ctx, d, h, getWorkspaceDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
+
+	return identityWorkspaceDetails, nil
 }
