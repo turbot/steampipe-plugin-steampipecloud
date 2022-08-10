@@ -78,9 +78,9 @@ func tableSteampipeCloudOrganizationWorkspaceMember(_ context.Context) *plugin.T
 				Type:        proto.ColumnType_STRING,
 			},
 			{
-				Name:        "email",
-				Description: "The email address for the member.",
-				Type:        proto.ColumnType_STRING,
+				Name:        "user",
+				Description: "Additional information about the user.",
+				Type:        proto.ColumnType_JSON,
 			},
 			{
 				Name:        "role",
@@ -94,8 +94,19 @@ func tableSteampipeCloudOrganizationWorkspaceMember(_ context.Context) *plugin.T
 			},
 			{
 				Name:        "created_at",
-				Description: "The member's creation time.",
+				Description: "The time when the member was added.",
 				Type:        proto.ColumnType_TIMESTAMP,
+			},
+			{
+				Name:        "created_by_id",
+				Description: "The unique identifier of the user who added the member.",
+				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromCamel(),
+			},
+			{
+				Name:        "created_by",
+				Description: "Information about the user who added the member.",
+				Type:        proto.ColumnType_JSON,
 			},
 			{
 				Name:        "updated_at",
@@ -103,16 +114,15 @@ func tableSteampipeCloudOrganizationWorkspaceMember(_ context.Context) *plugin.T
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
-				Name:        "created_by",
-				Description: "ID of the user who invited the member.",
+				Name:        "updated_by_id",
+				Description: "The unique identifier of the user who last updated the member.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromField("CreatedById"),
+				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "updated_by",
-				Description: "ID of the user who last updated the member.",
-				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromField("UpdatedById"),
+				Description: "Information about the user who last updated the member.",
+				Type:        proto.ColumnType_JSON,
 			},
 			{
 				Name:        "version_id",
