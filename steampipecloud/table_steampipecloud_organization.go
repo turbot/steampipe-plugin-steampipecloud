@@ -53,29 +53,39 @@ func tableSteampipeCloudOrganization(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:        "created_at",
-				Description: "The organization's creation time.",
+				Description: "The time when the organization was created.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
-				Name:        "updated_at",
-				Description: "The organization's last updated time.",
-				Type:        proto.ColumnType_TIMESTAMP,
+				Name:        "created_by_id",
+				Description: "The unique identifier of the user who created the organization.",
+				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "created_by",
-				Description: "ID of the user who created the organization.",
+				Description: "Information about the user who created the organization.",
+				Type:        proto.ColumnType_JSON,
+			},
+			{
+				Name:        "updated_at",
+				Description: "The organization's last update time.",
+				Type:        proto.ColumnType_TIMESTAMP,
+			},
+			{
+				Name:        "updated_by_id",
+				Description: "The unique identifier of the user who last updated the organization.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromField("CreatedById"),
+				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "updated_by",
-				Description: "ID of the user who last updated the organization.",
-				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromField("UpdatedById"),
+				Description: "Information about the user who last updated the organization.",
+				Type:        proto.ColumnType_JSON,
 			},
 			{
 				Name:        "version_id",
-				Description: "The organization version ID.",
+				Description: "The current version ID for the organization.",
 				Type:        proto.ColumnType_INT,
 				Transform:   transform.FromCamel(),
 			},
@@ -110,7 +120,7 @@ func listOrganizations(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 	// execute list call
 	pagesLeft := true
 
-	var resp openapi.ListActorOrgsResponse
+	var resp openapi.ListUserOrgsResponse
 	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
@@ -133,7 +143,7 @@ func listOrganizations(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 			return nil, err
 		}
 
-		result := response.(openapi.ListActorOrgsResponse)
+		result := response.(openapi.ListUserOrgsResponse)
 
 		if result.HasItems() {
 			for _, org := range *result.Items {
