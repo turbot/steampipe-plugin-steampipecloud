@@ -56,23 +56,13 @@ func tableSteampipeCloudConnection(_ context.Context) *plugin.Table {
 				Name:        "identity_handle",
 				Description: "The handle name for an identity where the connection has been created.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromField("Identity.Handle"),
+				Hydrate:     getIdentityDetailsForConnection,
 			},
 			{
 				Name:        "identity_type",
 				Description: "The type of identity, which can be 'user' or 'org'.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromField("Identity.Type"),
-			},
-			{
-				Name:        "plugin",
-				Description: "The plugin name for the connection.",
-				Type:        proto.ColumnType_STRING,
-			},
-			{
-				Name:        "created_at",
-				Description: "The connection created time.",
-				Type:        proto.ColumnType_TIMESTAMP,
+				Hydrate:     getIdentityDetailsForConnection,
 			},
 			{
 				Name:        "type",
@@ -80,10 +70,30 @@ func tableSteampipeCloudConnection(_ context.Context) *plugin.Table {
 				Type:        proto.ColumnType_STRING,
 			},
 			{
-				Name:        "version_id",
-				Description: "The version ID for the connection.",
-				Type:        proto.ColumnType_INT,
+				Name:        "plugin",
+				Description: "The plugin name for the connection.",
+				Type:        proto.ColumnType_STRING,
+			},
+			{
+				Name:        "config",
+				Description: "The connection config details.",
+				Type:        proto.ColumnType_JSON,
+			},
+			{
+				Name:        "created_at",
+				Description: "The connection created time.",
+				Type:        proto.ColumnType_TIMESTAMP,
+			},
+			{
+				Name:        "created_by_id",
+				Description: "The unique identifier of the user who created the connection.",
+				Type:        proto.ColumnType_STRING,
 				Transform:   transform.FromCamel(),
+			},
+			{
+				Name:        "created_by",
+				Description: "Information about the user who created the connection.",
+				Type:        proto.ColumnType_JSON,
 			},
 			{
 				Name:        "updated_at",
@@ -91,9 +101,21 @@ func tableSteampipeCloudConnection(_ context.Context) *plugin.Table {
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
-				Name:        "config",
-				Description: "The connection config details.",
+				Name:        "updated_by_id",
+				Description: "The unique identifier of the user who last updated the connection.",
+				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromCamel(),
+			},
+			{
+				Name:        "updated_by",
+				Description: "Information about the user who last updated the connection.",
 				Type:        proto.ColumnType_JSON,
+			},
+			{
+				Name:        "version_id",
+				Description: "The version ID for the connection.",
+				Type:        proto.ColumnType_INT,
+				Transform:   transform.FromCamel(),
 			},
 		},
 	}
@@ -391,4 +413,34 @@ func getUserConnection(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 	}
 
 	return connection, nil
+}
+
+func getIdentityDetailsForConnection(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	// Create Session
+	svc, err := connect(ctx, d)
+	if err != nil {
+		plugin.Logger(ctx).Error("getIdentityDetailsForConnection", "connection_error", err)
+		return nil, err
+	}
+
+	// Get the identity id from the connection hydrate object
+	var identityId string
+	switch w := h.Item.(type) {
+	case openapi.Connection:
+		identityId = h.Item.(openapi.Connection).IdentityId
+	case *openapi.Connection:
+		identityId = h.Item.(*openapi.Connection).IdentityId
+	default:
+		plugin.Logger(ctx).Debug("getIdentityDetailsForConnection", "Unknown Type", w)
+	}
+
+	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+		resp, _, err := svc.Identities.Get(ctx, identityId).Execute()
+		return resp, err
+	}
+
+	response, _ := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
+	identity := response.(openapi.Identity)
+
+	return &IdentityDetails{IdentityHandle: identity.Handle, IdentityType: identity.Type}, nil
 }
