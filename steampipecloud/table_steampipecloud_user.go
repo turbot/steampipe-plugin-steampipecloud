@@ -57,11 +57,6 @@ func tableSteampipeCloudUser(_ context.Context) *plugin.Table {
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
-				Name:        "email",
-				Description: "The email address of the user.",
-				Type:        proto.ColumnType_STRING,
-			},
-			{
 				Name:        "preview_access_mode",
 				Description: "The preview mode for the current user.",
 				Type:        proto.ColumnType_STRING,
