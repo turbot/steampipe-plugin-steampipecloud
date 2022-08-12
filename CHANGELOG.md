@@ -1,3 +1,34 @@
+## v1.0.0 [2022-08-12]
+
+_What's new?_
+
+- New tables added
+  - [steampipecloud_workspace_snapshot](https://hub.steampipe.io/plugins/turbot/steampipecloud/tables/steampipecloud_workspace_snapshot) ([#22](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/22))
+  - [steampipecloud_workspace_db_log](https://hub.steampipe.io/plugins/turbot/steampipecloud/tables/steampipecloud_workspace_db_log) ([#23](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/23))
+
+_Enhancements_
+
+- Added `process_id` column to `steampipecloud_audit_log` table. ([#24](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/24))
+- Added `created_by_id`, `created_by`, `updated_by_id`, `updated_by` columns to `steampipecloud_connection` table. ([#24](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/24))
+- Added `created_by_id`, `updated_by_id` columns to `steampipecloud_organization` table. ([#24](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/24))
+- Modified columns `created_by`, `updated_by` to store additional information about the user who created or updated the organization in `steampipecloud_organization` table. ([#24](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/24))
+- Added `user`, `scope`, `created_by_id`, `updated_by_id` columns to `steampipecloud_organization_member` table. ([#24](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/24))
+- Modified columns `created_by`, `updated_by` to store additional information about the user who created or updated the organization member in `steampipecloud_organization_member` table. ([#24](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/24))
+- Removed column `email` from `steampipecloud_organization_member` table. ([#24](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/24))
+- Added `user`, `created_by_id`, `updated_by_id` columns to `steampipecloud_organization_workspace_member` table. ([#24](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/24))
+- Modified columns `created_by`, `updated_by` to store additional information about the user who created or updated the organization workspace member in `steampipecloud_organization_workspace_member` table. ([#24](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/24))
+- Removed column `email` from `steampipecloud_organization_workspace_member` table. ([#24](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/24))
+- Removed column `email` from `steampipecloud_user` table. ([#24](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/24))
+- Added `host`, `api_version`, `cli_version`, `created_by_id`, `updated_by_id` columns to `steampipecloud_workspace` table. ([#24](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/24))
+- Modified column `workspace_state` renamed to `state` in `steampipecloud_workspace` table. ([#24](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/24))
+- Modified columns `created_by`, `updated_by` to store additional information about the user who created or updated the organization workspace member in `steampipecloud_workspace` table. ([#24](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/24))
+- Added `identity_handle`, `identity_type`, `workspace_handle`, `connection_handle`, `connection`, `created_by_id`, `created_by`, `updated_by_id`, `updated_by` columns to `steampipecloud_workspace_connection` table. ([#24](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/24))
+- Added `identity_handle`, `workspace_handle`, `created_by_id`, `created_by`, `updated_by_id`, `updated_by`, `version_id` columns to `steampipecloud_workspace_mod` table. ([#24](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/24))
+- Modified column `mod_constraint` renamed to `constraint` in `steampipecloud_workspace_mod` table. ([#24](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/24))
+- Added `version_id` column to `steampipecloud_workspace_mod_variable` table. ([#24](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/24))
+- Modified column `created_by_handle` renamed to `created_by_id` to store identifier of the person who created the setting in `steampipecloud_workspace_mod_variable` table. ([#24](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/24))
+- Modified column `updated_by_handle` renamed to `updated_by_id` to store identifier of the person who last updated the setting in `steampipecloud_workspace_mod_variable` table. ([#24](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/24))
+
 ## v0.3.0 [2022-07-20]
 
 _What's new?_
