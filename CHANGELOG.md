@@ -29,6 +29,10 @@ _Enhancements_
 - Modified column `created_by_handle` renamed to `created_by_id` to store identifier of the person who created the setting in `steampipecloud_workspace_mod_variable` table. ([#24](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/24))
 - Modified column `updated_by_handle` renamed to `updated_by_id` to store identifier of the person who last updated the setting in `steampipecloud_workspace_mod_variable` table. ([#24](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/24))
 
+_Dependencies_
+
+- Recompiled plugin with [steampipe-cloud-sdk-go v0.1.3](https://github.com/turbot/steampipe-cloud-sdk-go/blob/main/CHANGELOG.md#013-2022-08-12). ([#24](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/24))
+
 ## v0.3.0 [2022-07-20]
 
 _What's new?_
