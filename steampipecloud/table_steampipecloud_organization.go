@@ -110,7 +110,7 @@ func listOrganizations(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 	// execute list call
 	pagesLeft := true
 
-	var resp openapi.ListActorOrgsResponse
+	var resp openapi.ListUserOrgsResponse
 	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
@@ -133,7 +133,7 @@ func listOrganizations(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 			return nil, err
 		}
 
-		result := response.(openapi.ListActorOrgsResponse)
+		result := response.(openapi.ListUserOrgsResponse)
 
 		if result.HasItems() {
 			for _, org := range *result.Items {
