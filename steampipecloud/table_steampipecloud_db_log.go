@@ -12,13 +12,13 @@ import (
 
 //// TABLE DEFINITION
 
-func tableSteampipeCloudWorkspaceDbLog(_ context.Context) *plugin.Table {
+func tableSteampipeCloudWorkspaceDBLog(_ context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "steampipecloud_workspace_db_log",
 		Description: "Database logs records the underlying queries executed when a user executes a query.",
 		List: &plugin.ListConfig{
 			ParentHydrate: listWorkspaces,
-			Hydrate:       listWorkspaceDbLogs,
+			Hydrate:       listWorkspaceDBLogs,
 		},
 		Columns: []*plugin.Column{
 			{
@@ -87,14 +87,14 @@ func tableSteampipeCloudWorkspaceDbLog(_ context.Context) *plugin.Table {
 
 //// LIST FUNCTION
 
-func listWorkspaceDbLogs(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+func listWorkspaceDBLogs(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	// Get the workspace object from the parent hydrate
 	workspace := h.Item.(*openapi.Workspace)
 
 	// Create the connection
 	svc, err := connect(ctx, d)
 	if err != nil {
-		plugin.Logger(ctx).Error("listDbLogs", "connection_error", err)
+		plugin.Logger(ctx).Error("listDBLogs", "connection_error", err)
 		return nil, err
 	}
 
@@ -102,7 +102,7 @@ func listWorkspaceDbLogs(ctx context.Context, d *plugin.QueryData, h *plugin.Hyd
 	getUserIdentityCached := plugin.HydrateFunc(getUserIdentity).WithCache()
 	commonData, err := getUserIdentityCached(ctx, d, h)
 	if err != nil {
-		plugin.Logger(ctx).Error("listDbLogs", "getUserIdentityCached", err)
+		plugin.Logger(ctx).Error("listDBLogs", "getUserIdentityCached", err)
 		return nil, err
 	}
 
@@ -125,23 +125,23 @@ func listWorkspaceDbLogs(ctx context.Context, d *plugin.QueryData, h *plugin.Hyd
 
 	// If we want to get the db logs for the user
 	if user.Id == workspace.IdentityId {
-		err = listUserWorkspaceDbLogs(ctx, d, h, svc, maxResults, user.Id, workspace.Id)
+		err = listUserWorkspaceDBLogs(ctx, d, h, svc, maxResults, user.Id, workspace.Id)
 	} else {
-		err = listOrgWorkspaceDbLogs(ctx, d, h, svc, maxResults, workspace.IdentityId, workspace.Id)
+		err = listOrgWorkspaceDBLogs(ctx, d, h, svc, maxResults, workspace.IdentityId, workspace.Id)
 	}
 	if err != nil {
-		plugin.Logger(ctx).Error("listDbLogs", "error", err)
+		plugin.Logger(ctx).Error("listDBLogs", "error", err)
 		return nil, err
 	}
 
 	if err != nil {
-		plugin.Logger(ctx).Error("listDbLogs", "error", err)
+		plugin.Logger(ctx).Error("listDBLogs", "error", err)
 		return nil, err
 	}
 	return nil, nil
 }
 
-func listUserWorkspaceDbLogs(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, svc *openapi.APIClient, maxResults int32, identityId, workspaceId string) error {
+func listUserWorkspaceDBLogs(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, svc *openapi.APIClient, maxResults int32, identityId, workspaceId string) error {
 	var err error
 
 	// execute list call
@@ -165,7 +165,7 @@ func listUserWorkspaceDbLogs(ctx context.Context, d *plugin.QueryData, h *plugin
 		response, err := plugin.RetryHydrate(ctx, d, h, listDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
 		if err != nil {
-			plugin.Logger(ctx).Error("listUserDbLogs", "list", err)
+			plugin.Logger(ctx).Error("listUserDBLogs", "list", err)
 			return err
 		}
 
@@ -191,7 +191,7 @@ func listUserWorkspaceDbLogs(ctx context.Context, d *plugin.QueryData, h *plugin
 	return nil
 }
 
-func listOrgWorkspaceDbLogs(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, svc *openapi.APIClient, maxResults int32, identityId, workspaceId string) error {
+func listOrgWorkspaceDBLogs(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, svc *openapi.APIClient, maxResults int32, identityId, workspaceId string) error {
 	var err error
 
 	// execute list call
@@ -215,7 +215,7 @@ func listOrgWorkspaceDbLogs(ctx context.Context, d *plugin.QueryData, h *plugin.
 		response, err := plugin.RetryHydrate(ctx, d, h, listDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
 		if err != nil {
-			plugin.Logger(ctx).Error("listOrgDbLogs", "list", err)
+			plugin.Logger(ctx).Error("listOrgDBLogs", "list", err)
 			return err
 		}
 
