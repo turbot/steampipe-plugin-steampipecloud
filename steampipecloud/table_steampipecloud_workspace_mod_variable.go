@@ -85,12 +85,12 @@ func tableSteampipeCloudWorkspaceModVariable(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:        "created_at",
-				Description: "Time when the mod was installed.",
+				Description: "Time when the mod variable was created.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
 				Name:        "created_by_id",
-				Description: "Unique Identifier of the user who created the setting.",
+				Description: "Unique identifier of the user who created the setting.",
 				Type:        proto.ColumnType_STRING,
 				Transform:   transform.FromCamel(),
 			},
@@ -101,12 +101,12 @@ func tableSteampipeCloudWorkspaceModVariable(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:        "updated_at",
-				Description: "Time when the mod was updated.",
+				Description: "Time when the mod variable was last updated.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
 				Name:        "updated_by_id",
-				Description: "Unique Identifier of the user who last updated the setting.",
+				Description: "Unique identifier of the user who last updated the setting.",
 				Type:        proto.ColumnType_STRING,
 				Transform:   transform.FromCamel(),
 			},

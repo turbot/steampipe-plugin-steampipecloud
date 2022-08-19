@@ -115,7 +115,7 @@ func tableSteampipeCloudWorkspace(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:        "created_by",
-				Description: "Information about the user who created the workspace..",
+				Description: "Information about the user who created the workspace.",
 				Type:        proto.ColumnType_JSON,
 			},
 			{
