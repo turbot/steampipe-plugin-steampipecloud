@@ -59,11 +59,7 @@ func connect(_ context.Context, d *plugin.QueryData) (*openapiclient.APIClient, 
 		host = *steampipecloudConfig.Host
 	}
 
-	if host == "" {
-		return nil, errors.New("'host' must be set in the connection configuration. Edit your connection configuration file and then restart Steampipe")
-	}
-
-	if !strings.Contains(host, "cloud.steampipe.io") {
+	if host != "" && !strings.Contains(host, "cloud.steampipe.io") {
 		parsedURL, parseErr := url.Parse(host)
 		if parseErr != nil {
 			return nil, fmt.Errorf(`invalid host: %v`, parseErr)
