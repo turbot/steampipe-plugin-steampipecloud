@@ -179,8 +179,6 @@ func listUserWorkspaceMods(ctx context.Context, d *plugin.QueryData, h *plugin.H
 
 		if result.HasItems() {
 			for _, workspaceMod := range *result.Items {
-				workspaceMod.Workspace = &openapi.Workspace{}
-				workspaceMod.Workspace.Handle = workspaceHandle
 				d.StreamListItem(ctx, workspaceMod)
 
 				// Context can be cancelled due to manual cancellation or the limit has been hit
@@ -231,8 +229,6 @@ func listOrgWorkspaceMods(ctx context.Context, d *plugin.QueryData, h *plugin.Hy
 
 		if result.HasItems() {
 			for _, workspaceMod := range *result.Items {
-				workspaceMod.Workspace = &openapi.Workspace{}
-				workspaceMod.Workspace.Handle = workspaceHandle
 				d.StreamListItem(ctx, workspaceMod)
 
 				// Context can be cancelled due to manual cancellation or the limit has been hit
@@ -312,7 +308,6 @@ func getUserWorkspaceMod(ctx context.Context, d *plugin.QueryData, h *plugin.Hyd
 	response, err := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
 	workspaceMod := response.(openapi.WorkspaceMod)
-	workspaceMod.Workspace = &openapi.Workspace{}
 
 	if err != nil {
 		plugin.Logger(ctx).Error("getUserWorkspaceMod", "get", err)
@@ -336,7 +331,6 @@ func getOrgWorkspaceMod(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 	response, err := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
 	workspaceMod := response.(openapi.WorkspaceMod)
-	workspaceMod.Workspace = &openapi.Workspace{}
 
 	if err != nil {
 		plugin.Logger(ctx).Error("getOrgWorkspaceMod", "get", err)
