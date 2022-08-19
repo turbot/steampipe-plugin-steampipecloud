@@ -85,25 +85,14 @@ func tableSteampipeCloudWorkspaceModVariable(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:        "created_at",
-				Description: "Time when the mod was installed.",
+				Description: "Time when the mod variable was created.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
-				Name:        "updated_at",
-				Description: "Time when the mod was updated.",
-				Type:        proto.ColumnType_TIMESTAMP,
-			},
-			{
-				Name:        "created_by_handle",
-				Description: "Handle of the user who created the setting if any.",
+				Name:        "created_by_id",
+				Description: "Unique identifier of the user who created the setting.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromField("CreatedBy.Handle"),
-			},
-			{
-				Name:        "updated_by_handle",
-				Description: "Handle of the user who updated the setting if any.",
-				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromField("UpdatedBy.Handle"),
+				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "created_by",
@@ -111,9 +100,26 @@ func tableSteampipeCloudWorkspaceModVariable(_ context.Context) *plugin.Table {
 				Type:        proto.ColumnType_JSON,
 			},
 			{
+				Name:        "updated_at",
+				Description: "Time when the mod variable was last updated.",
+				Type:        proto.ColumnType_TIMESTAMP,
+			},
+			{
+				Name:        "updated_by_id",
+				Description: "Unique identifier of the user who last updated the setting.",
+				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromCamel(),
+			},
+			{
 				Name:        "updated_by",
 				Description: "Information about the user who updated the Setting.",
 				Type:        proto.ColumnType_JSON,
+			},
+			{
+				Name:        "version_id",
+				Description: "The current version ID of the variable.",
+				Type:        proto.ColumnType_INT,
+				Transform:   transform.FromCamel(),
 			},
 		},
 	}

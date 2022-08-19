@@ -9,7 +9,7 @@ Workspaces provide a bounded context for managing, operating, and securing Steam
 ```sql
 select
   id,
-  workspace_state,
+  state,
   handle,
   identity_handle
 from
@@ -21,7 +21,7 @@ from
 ```sql
 select
   id,
-  workspace_state,
+  state,
   handle,
   identity_handle
 from
@@ -35,7 +35,7 @@ where
 ```sql
 select
   id,
-  workspace_state,
+  state,
   handle,
   identity_handle
 from
@@ -49,11 +49,11 @@ where
 ```sql
 select
   id,
-  workspace_state,
+  state,
   handle,
   identity_handle
 from
   steampipecloud_workspace
 where
-  workspace_state <> 'running';
+  state <> 'running';
 ```

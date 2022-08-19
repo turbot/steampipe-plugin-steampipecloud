@@ -91,6 +91,12 @@ func tableSteampipeCloudAuditLog(_ context.Context) *plugin.Table {
 				Description: "The data which has been modified on the entity.",
 				Type:        proto.ColumnType_JSON,
 			},
+			{
+				Name:        "process_id",
+				Description: "The process id which this entry is a part of.",
+				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromCamel(),
+			},
 		},
 	}
 }
