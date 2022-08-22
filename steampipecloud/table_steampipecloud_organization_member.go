@@ -49,7 +49,7 @@ func tableSteampipeCloudOrganizationMember(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:        "status",
-				Description: "The member current status.",
+				Description: "The member current status. Possible values are: invited, accepted.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
