@@ -29,30 +29,15 @@ type SnapshotData struct {
 func tableSteampipeCloudWorkspaceSnapshot(_ context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "steampipecloud_workspace_snapshot",
-		Description: "Organization workspace members can collaborate and share connections and dashboards.",
+		Description: "Snapshots are point in time captures of dashboard runs in a workspace.",
 		List: &plugin.ListConfig{
 			ParentHydrate: listWorkspaces,
 			Hydrate:       listWorkspaceSnapshots,
 			KeyColumns: []*plugin.KeyColumn{
 				{
-					Name:      "identity_id",
+					Name:      "created_at",
 					Require:   plugin.Optional,
-					Operators: []string{"=", "<>"},
-				},
-				{
-					Name:      "workspace_id",
-					Require:   plugin.Optional,
-					Operators: []string{"=", "<>"},
-				},
-				{
-					Name:      "state",
-					Require:   plugin.Optional,
-					Operators: []string{"=", "<>"},
-				},
-				{
-					Name:      "visibility",
-					Require:   plugin.Optional,
-					Operators: []string{"=", "<>"},
+					Operators: []string{">", ">=", "=", "<", "<="},
 				},
 				{
 					Name:      "dashboard_name",
@@ -60,19 +45,19 @@ func tableSteampipeCloudWorkspaceSnapshot(_ context.Context) *plugin.Table {
 					Operators: []string{"=", "<>"},
 				},
 				{
-					Name:      "schema_version",
+					Name:      "dashboard_title",
 					Require:   plugin.Optional,
 					Operators: []string{"=", "<>"},
 				},
 				{
-					Name:      "start_time",
+					Name:      "id",
 					Require:   plugin.Optional,
-					Operators: []string{">", ">=", "=", "<", "<="},
+					Operators: []string{"=", "<>"},
 				},
 				{
-					Name:      "end_time",
+					Name:      "visibility",
 					Require:   plugin.Optional,
-					Operators: []string{">", ">=", "=", "<", "<="},
+					Operators: []string{"=", "<>"},
 				},
 				{
 					Name:       "query_where",
@@ -88,13 +73,13 @@ func tableSteampipeCloudWorkspaceSnapshot(_ context.Context) *plugin.Table {
 		Columns: []*plugin.Column{
 			{
 				Name:        "id",
-				Description: "The unique identifier for the member.",
+				Description: "The unique identifier for the snapshot.",
 				Type:        proto.ColumnType_STRING,
 				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "identity_id",
-				Description: "The unique identifier of the indentity to which the snapshot belongs to.",
+				Description: "The unique identifier of the identity to which the snapshot belongs to.",
 				Type:        proto.ColumnType_STRING,
 				Transform:   transform.FromCamel(),
 			},
@@ -139,6 +124,11 @@ func tableSteampipeCloudWorkspaceSnapshot(_ context.Context) *plugin.Table {
 				Type:        proto.ColumnType_STRING,
 			},
 			{
+				Name:        "dashboard_title",
+				Description: "The title of the dashboard this snapshot belongs to.",
+				Type:        proto.ColumnType_STRING,
+			},
+			{
 				Name:        "schema_version",
 				Description: "The schema version of the underlying snapshot.",
 				Type:        proto.ColumnType_STRING,
@@ -149,28 +139,13 @@ func tableSteampipeCloudWorkspaceSnapshot(_ context.Context) *plugin.Table {
 				Type:        proto.ColumnType_JSON,
 			},
 			{
-				Name:        "variables",
-				Description: "The variables used for this snapshot.",
+				Name:        "tags",
+				Description: "The tags for the snapshot.",
 				Type:        proto.ColumnType_JSON,
-			},
-			{
-				Name:        "search_path",
-				Description: "The search path used for this snapshot.",
-				Type:        proto.ColumnType_JSON,
-			},
-			{
-				Name:        "start_time",
-				Description: "The time the dashboard execution started.",
-				Type:        proto.ColumnType_TIMESTAMP,
-			},
-			{
-				Name:        "end_time",
-				Description: "The time the dashboard execution ended.",
-				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
 				Name:        "data",
-				Description: "The data for snapshot.",
+				Description: "The data for the snapshot.",
 				Type:        proto.ColumnType_JSON,
 				Hydrate:     getSnapshotData,
 			},
@@ -274,45 +249,50 @@ func listUserWorkspaceSnapshots(ctx context.Context, d *plugin.QueryData, h *plu
 	}
 
 	var filter string
-	// If query_where is passed in the query, that takes precedence
-	// we will not evaluate the other quals
-	if d.KeyColumnQuals["query_where"] != nil {
-		filter = d.KeyColumnQuals["query_where"].GetStringValue()
-	} else {
-		var clauses []string
-		for _, keyQual := range d.Table.List.KeyColumns {
-			filterQual := d.Quals[keyQual.Name]
-			if filterQual == nil {
-				continue
-			}
-			for _, qual := range filterQual.Quals {
-				if qual.Value != nil {
-					var value string
-					if keyQual.Name == "start_time" || keyQual.Name == "end_time" {
-						t := time.Unix(qual.Value.GetTimestampValue().Seconds, int64(qual.Value.GetTimestampValue().Nanos)).UTC()
-						value = t.Format("2006-01-02 15:04:05.00000")
-					} else {
-						value = qual.Value.GetStringValue()
-					}
-					switch qual.Operator {
-					case "=":
-						clauses = append(clauses, fmt.Sprintf(`%s = '%s'`, keyQual.Name, value))
-					case "<>":
-						clauses = append(clauses, fmt.Sprintf(`%s <> '%s'`, keyQual.Name, value))
-					case ">":
-						clauses = append(clauses, fmt.Sprintf(`%s > '%s'`, keyQual.Name, value))
-					case ">=":
-						clauses = append(clauses, fmt.Sprintf(`%s >= '%s'`, keyQual.Name, value))
-					case "<":
-						clauses = append(clauses, fmt.Sprintf(`%s < '%s'`, keyQual.Name, value))
-					case "<=":
-						clauses = append(clauses, fmt.Sprintf(`%s <= '%s'`, keyQual.Name, value))
-					}
+	// collect all clauses passed as quals except for "query_where"
+	var clauses []string
+	for _, keyQual := range d.Table.List.KeyColumns {
+		filterQual := d.Quals[keyQual.Name]
+		if filterQual == nil || keyQual.Name == "query_where" {
+			continue
+		}
+		for _, qual := range filterQual.Quals {
+			if qual.Value != nil {
+				var value string
+				if keyQual.Name == "created_at" {
+					t := time.Unix(qual.Value.GetTimestampValue().Seconds, int64(qual.Value.GetTimestampValue().Nanos)).UTC()
+					value = t.Format("2006-01-02 15:04:05.00000")
+				} else {
+					value = qual.Value.GetStringValue()
+				}
+				switch qual.Operator {
+				case "=":
+					clauses = append(clauses, fmt.Sprintf(`%s = '%s'`, keyQual.Name, value))
+				case "<>":
+					clauses = append(clauses, fmt.Sprintf(`%s <> '%s'`, keyQual.Name, value))
+				case ">":
+					clauses = append(clauses, fmt.Sprintf(`%s > '%s'`, keyQual.Name, value))
+				case ">=":
+					clauses = append(clauses, fmt.Sprintf(`%s >= '%s'`, keyQual.Name, value))
+				case "<":
+					clauses = append(clauses, fmt.Sprintf(`%s < '%s'`, keyQual.Name, value))
+				case "<=":
+					clauses = append(clauses, fmt.Sprintf(`%s <= '%s'`, keyQual.Name, value))
 				}
 			}
 		}
+	}
 
-		filter = strings.Join(clauses, " and ")
+	// Frame the filter string by joining the collected quals by "and"
+	filter = strings.Join(clauses, " and ")
+
+	// Check if a query_where qual has been passed and add it to the filter string if yes
+	if d.KeyColumnQuals["query_where"] != nil {
+		if len(filter) >= 1 {
+			filter = filter + " and " + d.KeyColumnQuals["query_where"].GetStringValue()
+		} else {
+			filter = d.KeyColumnQuals["query_where"].GetStringValue()
+		}
 	}
 
 	pagesLeft := true
