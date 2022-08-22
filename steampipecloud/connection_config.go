@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"strings"
 
@@ -59,12 +60,39 @@ func connect(_ context.Context, d *plugin.QueryData) (*openapiclient.APIClient, 
 	}
 
 	if host != "" && !strings.Contains(host, "cloud.steampipe.io") {
-		configuration.Servers = []openapiclient.ServerConfiguration{
-			{
-				URL:         fmt.Sprintf("%s/api/v0", host),
-				Description: "Local API",
-			},
+		parsedURL, parseErr := url.Parse(host)
+		if parseErr != nil {
+			return nil, fmt.Errorf(`invalid host: %v`, parseErr)
 		}
+		if parsedURL.Host == "" {
+			return nil, errors.New(`missing protocol or host`)
+		}
+
+		// Parse and frame the Primary Servers
+		var primaryServers []openapiclient.ServerConfiguration
+		for _, server := range configuration.Servers {
+			serverURL, parseErr := url.Parse(server.URL)
+			if parseErr != nil {
+				return nil, fmt.Errorf(`invalid host: %v`, parseErr)
+			}
+			primaryServers = append(primaryServers, openapiclient.ServerConfiguration{URL: fmt.Sprintf("%s://%s%s", serverURL.Scheme, parsedURL.Host, serverURL.Path), Description: "Local API"})
+		}
+		configuration.Servers = primaryServers
+
+		// Parse and frame the Operation Servers
+		operationServers := make(map[string]openapiclient.ServerConfigurations)
+		for service, servers := range configuration.OperationServers {
+			var serviceServers []openapiclient.ServerConfiguration
+			for _, server := range servers {
+				serverURL, parseErr := url.Parse(server.URL)
+				if parseErr != nil {
+					return nil, fmt.Errorf(`invalid host: %v`, parseErr)
+				}
+				serviceServers = append(serviceServers, openapiclient.ServerConfiguration{URL: fmt.Sprintf("%s://%s%s", serverURL.Scheme, parsedURL.Host, serverURL.Path), Description: "Local API"})
+			}
+			operationServers[service] = serviceServers
+		}
+		configuration.OperationServers = operationServers
 	}
 
 	apiClient := openapiclient.NewAPIClient(configuration)
