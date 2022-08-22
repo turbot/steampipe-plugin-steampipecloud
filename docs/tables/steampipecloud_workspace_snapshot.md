@@ -4,7 +4,7 @@ A Steampipe snapshot is a point in time view of a benchmark. It can be shared ac
 
 **Important notes:**
 
-This table supports optional quals. Queries with optional quals in `where` clause are optimised to use steampipecloud filters.
+This table supports optional quals. Queries with optional quals in the `where` clause are optimised to use Steampipe Cloud filters.
 
 Optional quals are supported for the following columns:
 
@@ -13,13 +13,13 @@ Optional quals are supported for the following columns:
 - `dashboard_title`
 - `id`
 - `inputs`
+- `query_where` - Allows use of explicit query parameter `where` clause. Any `where` clause passed in will be combined with other optional quals.
 - `tags`
 - `visibility`
-- `query_where` - Allows use of explicit query where clause.
 
 ## Examples
 
-### Basic information about snapshots across all workspaces
+### Basic info
 
 ```sql
 select
@@ -36,7 +36,7 @@ from
   steampipecloud_workspace_snapshot;
 ```
 
-### List snapshots of a workspace with handle
+### List snapshots for a specific workspace
 
 ```sql
 select
@@ -55,7 +55,7 @@ where
   workspace_handle = 'dev';
 ```
 
-### List public snapshots for a dashboard across all workspaces
+### List public snapshots for the AWS Tags Limit benchmark dashboard across all workspaces
 
 ```sql
 select
@@ -75,7 +75,7 @@ where
   and visibility = 'anyone_with_link';
 ```
 
-### List snapshots for a dashboard executed in the last 7 days
+### List snapshots for the AWS Compliance CIS v1.4.0 dashboard executed in the last 7 days
 
 ```sql
 select
@@ -91,7 +91,7 @@ select
 from
   steampipecloud_workspace_snapshot
 where
-  dashboard_name = 'aws_tags.benchmark.limit'
+  dashboard_name = 'aws_compliance.benchmark.cis_v140'
   and created_at >= now() - interval '7 days';
 ```
 
@@ -108,7 +108,7 @@ where
   and id = 'snap_cc1ini7m1tujk0r0oqvg_12fie4ah78yl5rwadj7p6j63';
 ```
 
-### List snapshots for a dashboard executed in the last 7 days using an explicit query_where
+### List snapshots for the AWS Tags Limit benchmark dashboard executed in the last 7 days using an explicit `query_where`
 
 ```sql
 select
