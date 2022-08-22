@@ -30,12 +30,12 @@ where
 ```
 
 ```
-> select user_handle, email, status from steampipecloud_organization_member where status = 'pending'
+> select user_handle, email, status from steampipecloud_organization_member where status = 'accepted'
 +-------------+------------------+----------+
 | user_handle | email            | status   |
 +-------------+------------------+----------+
-| mario       | mario@turbot.com | pending  |
-| yoshi       | yoshi@turbot.com | pending  |
+| mario       | mario@turbot.com | accepted |
+| yoshi       | yoshi@turbot.com | accepted |
 +-------------+------------------+----------+
 ```
 

@@ -16,7 +16,7 @@ from
   steampipecloud_organization_member;
 ```
 
-### List pending members
+### List invited members
 
 ```sql
 select
@@ -27,7 +27,7 @@ select
 from
   steampipecloud_organization_member
 where
-  status = 'pending';
+  status = 'invited';
 ```
 
 ### List members with owner role
