@@ -97,7 +97,7 @@ func tableSteampipeCloudWorkspaceSnapshot(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:        "workspace_id",
-				Description: "The id of the workspace.",
+				Description: "The unique identifier for the workspace.",
 				Type:        proto.ColumnType_STRING,
 				Transform:   transform.FromCamel(),
 			},
@@ -162,7 +162,7 @@ func tableSteampipeCloudWorkspaceSnapshot(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:        "created_by_id",
-				Description: "ID of the user who created the snapshot.",
+				Description: "The unique identifier of the user who created the snapshot.",
 				Type:        proto.ColumnType_STRING,
 				Transform:   transform.FromCamel(),
 			},
@@ -178,7 +178,7 @@ func tableSteampipeCloudWorkspaceSnapshot(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:        "updated_by_id",
-				Description: "ID of the user who last updated the snapshot.",
+				Description: "The unique identifier of the user who last updated the snapshot.",
 				Type:        proto.ColumnType_STRING,
 				Transform:   transform.FromCamel(),
 			},
