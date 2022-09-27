@@ -4,7 +4,7 @@ import (
 	"context"
 
 	openapi "github.com/turbot/steampipe-cloud-sdk-go"
-	"github.com/turbot/steampipe-plugin-sdk/v3/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v4/plugin"
 )
 
 func getUserIdentity(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {

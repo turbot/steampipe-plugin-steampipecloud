@@ -4,7 +4,7 @@ import (
 	// "github.com/lalitturbot/steampipe-plugin-steampipecloud/steampipecloud"
 	"steampipe-plugin-steampipecloud/steampipecloud"
 
-	"github.com/turbot/steampipe-plugin-sdk/v3/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v4/plugin"
 )
 
 func main() {
