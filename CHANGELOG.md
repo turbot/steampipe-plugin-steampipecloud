@@ -1,3 +1,10 @@
+## v0.5.0 [2022-09-27]
+
+_Dependencies_
+
+- Recompiled plugin with [steampipe-plugin-sdk v4.1.7](https://github.com/turbot/steampipe-plugin-sdk/blob/main/CHANGELOG.md#v417-2022-09-08) which includes several caching and memory management improvements. ([#25](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/25))
+- Recompiled plugin with Go version `1.19`. ([#25](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/25))
+
 ## v0.4.0 [2022-08-22]
 
 _Breaking changes_
