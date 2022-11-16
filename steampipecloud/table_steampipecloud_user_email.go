@@ -15,7 +15,7 @@ import (
 func tableSteampipeCloudUserEmail(_ context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "steampipecloud_user_email",
-		Description: "User Emails allows a user to manage their emails.",
+		Description: "User Email table allows users to manage their emails.",
 		List: &plugin.ListConfig{
 			Hydrate: listUserEmails,
 		},
