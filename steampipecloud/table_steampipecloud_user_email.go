@@ -33,7 +33,7 @@ func tableSteampipeCloudUserEmail(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:        "status",
-				Description: "The current status of the email. Can be one of pending / verified",
+				Description: "The current status of the email. Can be one of pending/verified",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
