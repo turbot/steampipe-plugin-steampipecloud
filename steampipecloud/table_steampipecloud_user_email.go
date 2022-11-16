@@ -28,7 +28,7 @@ func tableSteampipeCloudUserEmail(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:        "email",
-				Description: "The email id.",
+				Description: "The email ID.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
