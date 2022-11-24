@@ -1,8 +1,8 @@
 # Table: steampipecloud_user_email
 
-User Emails allows a user to manage their emails.
+The user email table allows users to manage their email.
 
-The `steampipecloud_user_email` table returns a list of emails added by a user to their profile.
+The `steampipecloud_user_email` table returns a list of emails added by users to their profile.
 
 ## Examples
 
