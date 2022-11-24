@@ -1,3 +1,15 @@
+## v0.6.0 [2022-11-24]
+
+_What's new?_
+
+- New tables added
+  - [steampipecloud_user_email](https://hub.steampipe.io/plugins/turbot/steampipecloud/tables/steampipecloud_user_email) ([#27](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/27))
+  - [steampipecloud_user_preferences](https://hub.steampipe.io/plugins/turbot/steampipecloud/tables/steampipecloud_user_preferences) ([#27](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/27))
+
+_Dependencies_
+
+- Recompiled plugin with [steampipe-plugin-sdk v4.1.8](https://github.com/turbot/steampipe-plugin-sdk/blob/main/CHANGELOG.md#v418-2022-09-08) which increases the default open file limit. ([#28](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/28))
+
 ## v0.5.0 [2022-09-27]
 
 _Dependencies_
