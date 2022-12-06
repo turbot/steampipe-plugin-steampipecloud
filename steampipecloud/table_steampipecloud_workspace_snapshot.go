@@ -188,6 +188,11 @@ func tableSteampipeCloudWorkspaceSnapshot(_ context.Context) *plugin.Table {
 				Type:        proto.ColumnType_JSON,
 			},
 			{
+				Name:        "expires_at",
+				Description: "The time when the snapshot will expire.",
+				Type:        proto.ColumnType_TIMESTAMP,
+			},
+			{
 				Name:        "version_id",
 				Description: "The current version ID for the snapshot.",
 				Type:        proto.ColumnType_INT,
