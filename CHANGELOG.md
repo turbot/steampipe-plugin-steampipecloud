@@ -1,3 +1,9 @@
+## v0.7.0 [2022-12-27]
+
+_Enhancements_
+
+- Added column `expires_at` to `steampipecloud_workspace_snapshot` table. ([#29](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/29))
+
 ## v0.6.0 [2022-11-24]
 
 _What's new?_
