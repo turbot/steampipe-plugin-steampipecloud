@@ -33,6 +33,7 @@ func Plugin(ctx context.Context) *plugin.Plugin {
 			"steampipecloud_workspace_mod":                 tableSteampipeCloudWorkspaceMod(ctx),
 			"steampipecloud_workspace_mod_variable":        tableSteampipeCloudWorkspaceModVariable(ctx),
 			"steampipecloud_workspace_db_log":              tableSteampipeCloudWorkspaceDBLog(ctx),
+			"steampipecloud_workspace_pipeline":            tableSteampipeCloudWorkspacePipeline(ctx),
 			"steampipecloud_workspace_snapshot":            tableSteampipeCloudWorkspaceSnapshot(ctx),
 		},
 	}
