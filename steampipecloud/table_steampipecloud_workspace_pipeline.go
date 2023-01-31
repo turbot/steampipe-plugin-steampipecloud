@@ -113,6 +113,17 @@ func tableSteampipeCloudWorkspacePipeline(_ context.Context) *plugin.Table {
 				Type:        proto.ColumnType_JSON,
 			},
 			{
+				Name:        "last_process_id",
+				Description: "The unique identifier of the last process that was executed for the pipeline.",
+				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromCamel(),
+			},
+			{
+				Name:        "last_process",
+				Description: "Information about the process that was last executed for the pipeline.",
+				Type:        proto.ColumnType_JSON,
+			},
+			{
 				Name:        "created_at",
 				Description: "The time when the pipeline was created.",
 				Type:        proto.ColumnType_TIMESTAMP,
