@@ -23,6 +23,7 @@ func Plugin(ctx context.Context) *plugin.Plugin {
 			"steampipecloud_connection":                    tableSteampipeCloudConnection(ctx),
 			"steampipecloud_organization_member":           tableSteampipeCloudOrganizationMember(ctx),
 			"steampipecloud_organization":                  tableSteampipeCloudOrganization(ctx),
+			"steampipecloud_process":                       tableSteampipeCloudProcess(ctx),
 			"steampipecloud_organization_workspace_member": tableSteampipeCloudOrganizationWorkspaceMember(ctx),
 			"steampipecloud_token":                         tableSteampipeCloudToken(ctx),
 			"steampipecloud_user":                          tableSteampipeCloudUser(ctx),
@@ -34,6 +35,7 @@ func Plugin(ctx context.Context) *plugin.Plugin {
 			"steampipecloud_workspace_mod_variable":        tableSteampipeCloudWorkspaceModVariable(ctx),
 			"steampipecloud_workspace_db_log":              tableSteampipeCloudWorkspaceDBLog(ctx),
 			"steampipecloud_workspace_pipeline":            tableSteampipeCloudWorkspacePipeline(ctx),
+			"steampipecloud_workspace_process":             tableSteampipeCloudWorkspaceProcess(ctx),
 			"steampipecloud_workspace_snapshot":            tableSteampipeCloudWorkspaceSnapshot(ctx),
 		},
 	}

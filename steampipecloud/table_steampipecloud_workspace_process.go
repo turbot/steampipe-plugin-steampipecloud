@@ -12,8 +12,7 @@ import (
 	"github.com/turbot/steampipe-plugin-sdk/v4/plugin/transform"
 )
 
-type IdentityWorkspaceDetailsForPipeline struct {
-	IdentityId      string `json:"identity_id"`
+type IdentityWorkspaceDetailsForProcess struct {
 	IdentityHandle  string `json:"identity_handle"`
 	IdentityType    string `json:"identity_type"`
 	WorkspaceHandle string `json:"workspace_handle"`
@@ -21,13 +20,13 @@ type IdentityWorkspaceDetailsForPipeline struct {
 
 //// TABLE DEFINITION
 
-func tableSteampipeCloudWorkspacePipeline(_ context.Context) *plugin.Table {
+func tableSteampipeCloudWorkspaceProcess(_ context.Context) *plugin.Table {
 	return &plugin.Table{
-		Name:        "steampipecloud_workspace_pipeline",
-		Description: "Pipelines allow users to run different kinds of activities in steampipe cloud on a schedule.",
+		Name:        "steampipecloud_workspace_process",
+		Description: "Processes allow to track various activities in steampipe cloud.",
 		List: &plugin.ListConfig{
 			ParentHydrate: listWorkspaces,
-			Hydrate:       listWorkspacePipelines,
+			Hydrate:       listWorkspaceProcesses,
 			KeyColumns: []*plugin.KeyColumn{
 				{
 					Name:    "identity_handle",
@@ -49,36 +48,36 @@ func tableSteampipeCloudWorkspacePipeline(_ context.Context) *plugin.Table {
 		},
 		Get: &plugin.GetConfig{
 			KeyColumns: plugin.AllColumns([]string{"identity_handle", "workspace_handle", "id"}),
-			Hydrate:    getWorkspacePipeline,
+			Hydrate:    getWorkspaceProcess,
 		},
 		Columns: []*plugin.Column{
 			{
 				Name:        "id",
-				Description: "The unique identifier for the pipeline.",
+				Description: "The unique identifier for the process.",
 				Type:        proto.ColumnType_STRING,
 				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "identity_id",
-				Description: "The unique identifier of the identity to which the pipeline belongs to.",
+				Description: "The unique identifier of the identity to which the process belongs to.",
 				Type:        proto.ColumnType_STRING,
-				Hydrate:     getIdentityWorkspaceDetailsForPipeline,
+				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "identity_handle",
 				Description: "The handle of the identity.",
 				Type:        proto.ColumnType_STRING,
-				Hydrate:     getIdentityWorkspaceDetailsForPipeline,
+				Hydrate:     getIdentityWorkspaceDetailsForWorkspaceProcess,
 			},
 			{
 				Name:        "identity_type",
 				Description: "The type of identity, can be org/user.",
 				Type:        proto.ColumnType_STRING,
-				Hydrate:     getIdentityWorkspaceDetailsForPipeline,
+				Hydrate:     getIdentityWorkspaceDetailsForWorkspaceProcess,
 			},
 			{
 				Name:        "workspace_id",
-				Description: "The unique identifier for the workspace.",
+				Description: "The unique identifier of the workspace to which the process belongs to.",
 				Type:        proto.ColumnType_STRING,
 				Transform:   transform.FromCamel(),
 			},
@@ -86,79 +85,64 @@ func tableSteampipeCloudWorkspacePipeline(_ context.Context) *plugin.Table {
 				Name:        "workspace_handle",
 				Description: "The handle of the workspace.",
 				Type:        proto.ColumnType_STRING,
-				Hydrate:     getIdentityWorkspaceDetailsForPipeline,
+				Hydrate:     getIdentityWorkspaceDetailsForWorkspaceProcess,
 			},
 			{
-				Name:        "title",
-				Description: "The title of the pipeline.",
-				Type:        proto.ColumnType_STRING,
-			},
-			{
-				Name:        "frequency",
-				Description: "The frequency at which the pipeline will be executed.",
-				Type:        proto.ColumnType_JSON,
-			},
-			{
-				Name:        "pipeline",
-				Description: "The name of the pipeline to be executed.",
-				Type:        proto.ColumnType_STRING,
-			},
-			{
-				Name:        "args",
-				Description: "Arguments to be passed to the pipeline.",
-				Type:        proto.ColumnType_JSON,
-			},
-			{
-				Name:        "tags",
-				Description: "The tags for the pipeline.",
-				Type:        proto.ColumnType_JSON,
-			},
-			{
-				Name:        "last_process_id",
-				Description: "The unique identifier of the last process that was executed for the pipeline.",
+				Name:        "pipeline_id",
+				Description: "The unique identifier for the pipeline if a process is for a pipeline run/execution.",
 				Type:        proto.ColumnType_STRING,
 				Transform:   transform.FromCamel(),
 			},
 			{
-				Name:        "last_process",
-				Description: "Information about the process that was last executed for the pipeline.",
-				Type:        proto.ColumnType_JSON,
+				Name:        "type",
+				Description: "The type of action executed by the process.",
+				Type:        proto.ColumnType_STRING,
+			},
+			{
+				Name:        "state",
+				Description: "The current state of the process.",
+				Type:        proto.ColumnType_STRING,
+			},
+			{
+				Name:        "data_state",
+				Description: "The current state of the process and its log data.",
+				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "created_at",
-				Description: "The time when the pipeline was created.",
+				Description: "The time when the process was created.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
 				Name:        "created_by_id",
-				Description: "The unique identifier of the user who created the pipeline.",
+				Description: "The unique identifier of the user who created the process.",
 				Type:        proto.ColumnType_STRING,
 				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "created_by",
-				Description: "Information about the user who created the pipeline.",
+				Description: "Information about the user who created the process.",
 				Type:        proto.ColumnType_JSON,
 			},
 			{
 				Name:        "updated_at",
-				Description: "The time when the pipeline was last updated.",
+				Description: "The time when the process was last updated.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
 				Name:        "updated_by_id",
-				Description: "The unique identifier of the user who last updated the pipeline.",
+				Description: "The unique identifier of the user who last updated the process.",
 				Type:        proto.ColumnType_STRING,
 				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "updated_by",
-				Description: "Information about the user who last updated the pipeline.",
+				Description: "Information about the user who last updated the process.",
 				Type:        proto.ColumnType_JSON,
 			},
 			{
 				Name:        "version_id",
-				Description: "The current version ID for the pipeline.",
+				Description: "The current version ID for the process.",
 				Type:        proto.ColumnType_INT,
 				Transform:   transform.FromCamel(),
 			},
@@ -168,7 +152,7 @@ func tableSteampipeCloudWorkspacePipeline(_ context.Context) *plugin.Table {
 
 //// LIST FUNCTION
 
-func listWorkspacePipelines(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+func listWorkspaceProcesses(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	var workspace *openapi.Workspace
 	switch w := h.Item.(type) {
 	case openapi.Workspace:
@@ -177,7 +161,7 @@ func listWorkspacePipelines(ctx context.Context, d *plugin.QueryData, h *plugin.
 	case *openapi.Workspace:
 		workspace = h.Item.(*openapi.Workspace)
 	default:
-		plugin.Logger(ctx).Error("listWorkspacePipelines", "unknown response type for workspace list parent hydrate call", w)
+		plugin.Logger(ctx).Error("listWorkspaceProcesses", "unknown response type for workspace list parent hydrate call", w)
 	}
 
 	// If the requested number of items is less than the paging max limit
@@ -200,7 +184,7 @@ func listWorkspacePipelines(ctx context.Context, d *plugin.QueryData, h *plugin.
 
 	// Error out if both workspace_handle and workspace_id is passed
 	if workspaceHandle != "" && workspaceId != "" {
-		plugin.Logger(ctx).Error("listWorkspacePipelines", "please pass any one of workspace_id or workspace_handle")
+		plugin.Logger(ctx).Error("listWorkspaceProcesses", "please pass any one of workspace_id or workspace_handle")
 		return nil, fmt.Errorf("please pass any one of workspace_id or workspace_handle")
 	}
 	// If either one has been passed, check whether either of the handle or the id matches with the workspace in context
@@ -219,40 +203,40 @@ func listWorkspacePipelines(ctx context.Context, d *plugin.QueryData, h *plugin.
 
 	var err error
 	if strings.HasPrefix(workspace.IdentityId, "u_") {
-		err = listUserWorkspacePipelines(ctx, d, h, workspace.IdentityId, workspaceToPass, maxResults)
+		err = listUserWorkspaceProcesses(ctx, d, h, workspace.IdentityId, workspaceToPass, maxResults)
 	} else {
-		err = listOrgWorkspacePipelines(ctx, d, h, workspace.IdentityId, workspaceToPass, maxResults)
+		err = listOrgWorkspaceProcesses(ctx, d, h, workspace.IdentityId, workspaceToPass, maxResults)
 	}
 
 	if err != nil {
-		plugin.Logger(ctx).Error("listWorkspacePipelines", "error", err)
+		plugin.Logger(ctx).Error("listWorkspaceProcesses", "error", err)
 		return nil, err
 	}
 
 	return nil, nil
 }
 
-func listUserWorkspacePipelines(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, userHandle string, workspaceHandle string, maxResults int32) error {
+func listUserWorkspaceProcesses(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, userHandle, workspaceHandle string, maxResults int32) error {
 	// Create Session
 	svc, err := connect(ctx, d)
 	if err != nil {
-		plugin.Logger(ctx).Error("listUserWorkspacePipelines", "connection_error", err)
+		plugin.Logger(ctx).Error("listUserWorkspaceProcesses", "connection_error", err)
 		return err
 	}
 
 	pagesLeft := true
-	var resp openapi.ListPipelinesResponse
+	var resp openapi.ListProcessesResponse
 	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserWorkspacePipelines.List(ctx, userHandle, workspaceHandle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
+				resp, _, err = svc.UserWorkspaceProcesses.List(ctx, userHandle, workspaceHandle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserWorkspacePipelines.List(ctx, userHandle, workspaceHandle).Limit(maxResults).Execute()
+				resp, _, err = svc.UserWorkspaceProcesses.List(ctx, userHandle, workspaceHandle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -260,15 +244,15 @@ func listUserWorkspacePipelines(ctx context.Context, d *plugin.QueryData, h *plu
 		response, err := plugin.RetryHydrate(ctx, d, h, listDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
 		if err != nil {
-			plugin.Logger(ctx).Error("listUserWorkspacePipelines", "list", err)
+			plugin.Logger(ctx).Error("listUserWorkspaceProcesses", "list", err)
 			return err
 		}
 
-		result := response.(openapi.ListPipelinesResponse)
+		result := response.(openapi.ListProcessesResponse)
 
 		if result.HasItems() {
-			for _, pipeline := range *result.Items {
-				d.StreamListItem(ctx, pipeline)
+			for _, process := range *result.Items {
+				d.StreamListItem(ctx, process)
 
 				// Context can be cancelled due to manual cancellation or the limit has been hit
 				if d.QueryStatus.RowsRemaining(ctx) == 0 {
@@ -286,27 +270,27 @@ func listUserWorkspacePipelines(ctx context.Context, d *plugin.QueryData, h *plu
 	return nil
 }
 
-func listOrgWorkspacePipelines(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, orgHandle string, workspaceHandle string, maxResults int32) error {
+func listOrgWorkspaceProcesses(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, orgHandle, workspaceHandle string, maxResults int32) error {
 	// Create Session
 	svc, err := connect(ctx, d)
 	if err != nil {
-		plugin.Logger(ctx).Error("listOrgWorkspacePipelines", "connection_error", err)
+		plugin.Logger(ctx).Error("listOrgWorkspaceProcesses", "connection_error", err)
 		return err
 	}
 
 	pagesLeft := true
-	var resp openapi.ListPipelinesResponse
+	var resp openapi.ListProcessesResponse
 	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
 
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgWorkspacePipelines.List(ctx, orgHandle, workspaceHandle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
+				resp, _, err = svc.OrgWorkspaceProcesses.List(ctx, orgHandle, workspaceHandle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgWorkspacePipelines.List(ctx, orgHandle, workspaceHandle).Limit(maxResults).Execute()
+				resp, _, err = svc.OrgWorkspaceProcesses.List(ctx, orgHandle, workspaceHandle).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -314,15 +298,15 @@ func listOrgWorkspacePipelines(ctx context.Context, d *plugin.QueryData, h *plug
 		response, err := plugin.RetryHydrate(ctx, d, h, listDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
 		if err != nil {
-			plugin.Logger(ctx).Error("listOrgWorkspacePipelines", "list", err)
+			plugin.Logger(ctx).Error("listOrgWorkspaceProcesses", "list", err)
 			return err
 		}
 
-		result := response.(openapi.ListPipelinesResponse)
+		result := response.(openapi.ListProcessesResponse)
 
 		if result.HasItems() {
-			for _, pipeline := range *result.Items {
-				d.StreamListItem(ctx, pipeline)
+			for _, process := range *result.Items {
+				d.StreamListItem(ctx, process)
 
 				// Context can be cancelled due to manual cancellation or the limit has been hit
 				if d.QueryStatus.RowsRemaining(ctx) == 0 {
@@ -340,113 +324,111 @@ func listOrgWorkspacePipelines(ctx context.Context, d *plugin.QueryData, h *plug
 	return nil
 }
 
-func getWorkspacePipeline(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+func getWorkspaceProcess(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	identityHandle := d.KeyColumnQuals["identity_handle"].GetStringValue()
 	workspaceHandle := d.KeyColumnQuals["workspace_handle"].GetStringValue()
-	pipelineId := d.KeyColumnQuals["id"].GetStringValue()
+	processId := d.KeyColumnQuals["id"].GetStringValue()
 
 	// check if identityHandle or workspaceHandle or pipeline id is empty
-	if identityHandle == "" || workspaceHandle == "" || pipelineId == "" {
+	if identityHandle == "" || workspaceHandle == "" || processId == "" {
 		return nil, nil
 	}
 
 	getUserIdentityCached := plugin.HydrateFunc(getUserIdentity).WithCache()
 	commonData, err := getUserIdentityCached(ctx, d, h)
 	if err != nil {
-		plugin.Logger(ctx).Error("getWorkspacePipeline", "getUserIdentityCached", err)
+		plugin.Logger(ctx).Error("getWorkspaceProcess", "getUserIdentityCached", err)
 		return nil, err
 	}
 
 	user := commonData.(openapi.User)
 	var response interface{}
 	if identityHandle == user.Handle {
-		response, err = getUserWorkspacePipeline(ctx, d, h, identityHandle, workspaceHandle, pipelineId)
+		response, err = getUserWorkspaceProcess(ctx, d, h, identityHandle, workspaceHandle, processId)
 	} else {
-		response, err = getOrgWorkspacePipeline(ctx, d, h, identityHandle, workspaceHandle, pipelineId)
+		response, err = getOrgWorkspaceProcess(ctx, d, h, identityHandle, workspaceHandle, processId)
 	}
 
 	if err != nil {
-		plugin.Logger(ctx).Error("getWorkspacePipeline", "error", err)
+		plugin.Logger(ctx).Error("getWorkspaceProcess", "error", err)
 		return nil, err
 	}
 
-	return response.(openapi.Pipeline), nil
+	return response.(openapi.SpProcess), nil
 }
 
-func getUserWorkspacePipeline(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, userHandle, workspaceHandle, pipelineId string) (interface{}, error) {
+func getUserWorkspaceProcess(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, userHandle, workspaceHandle, processId string) (interface{}, error) {
 	// Create Session
 	svc, err := connect(ctx, d)
 	if err != nil {
-		plugin.Logger(ctx).Error("getUserWorkspacePipeline", "connection_error", err)
+		plugin.Logger(ctx).Error("getUserWorkspaceProcess", "connection_error", err)
 		return nil, err
 	}
 
-	var pipeline openapi.Pipeline
+	var process openapi.SpProcess
 
 	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-		pipeline, _, err = svc.UserWorkspacePipelines.Get(ctx, userHandle, workspaceHandle, pipelineId).Execute()
-		return pipeline, err
+		process, _, err = svc.UserWorkspaceProcesses.Get(ctx, userHandle, workspaceHandle, processId).Execute()
+		return process, err
 	}
 
 	response, err := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 	if err != nil {
-		plugin.Logger(ctx).Error("getUserWorkspacePipeline", "get", err)
+		plugin.Logger(ctx).Error("getUserWorkspaceProcess", "get", err)
 		return nil, err
 	}
 
 	return response, nil
 }
 
-func getOrgWorkspacePipeline(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, orgHandle, workspaceHandle, pipelineId string) (interface{}, error) {
+func getOrgWorkspaceProcess(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData, orgHandle, workspaceHandle, processId string) (interface{}, error) {
 	// Create Session
 	svc, err := connect(ctx, d)
 	if err != nil {
-		plugin.Logger(ctx).Error("getOrgWorkspacePipeline", "connection_error", err)
+		plugin.Logger(ctx).Error("getOrgWorkspaceProcess", "connection_error", err)
 		return nil, err
 	}
 
-	var pipeline openapi.Pipeline
+	var process openapi.SpProcess
 
 	getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-		pipeline, _, err = svc.OrgWorkspacePipelines.Get(ctx, orgHandle, workspaceHandle, pipelineId).Execute()
-		return pipeline, err
+		process, _, err = svc.OrgWorkspaceProcesses.Get(ctx, orgHandle, workspaceHandle, processId).Execute()
+		return process, err
 	}
 
 	response, err := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 	if err != nil {
-		plugin.Logger(ctx).Error("getOrgWorkspacePipeline", "get", err)
+		plugin.Logger(ctx).Error("getOrgWorkspaceProcess", "get", err)
 		return nil, err
 	}
 
 	return response, nil
 }
 
-func getIdentityWorkspaceDetailsForPipeline(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+func getIdentityWorkspaceDetailsForWorkspaceProcess(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	// Create Session
 	svc, err := connect(ctx, d)
 	if err != nil {
-		plugin.Logger(ctx).Error("getIdentityWorkspaceDetailsForPipeline", "connection_error", err)
+		plugin.Logger(ctx).Error("getIdentityWorkspaceDetailsForWorkspaceProcess", "connection_error", err)
 		return nil, err
 	}
 
-	var identityWorkspaceDetails IdentityWorkspaceDetailsForPipeline
+	var identityWorkspaceDetails IdentityWorkspaceDetailsForProcess
 	// get workspace details from hydrate data
 	// workspace details reside in the parent item in this case
 	switch w := h.ParentItem.(type) {
 	case openapi.Workspace:
-		plugin.Logger(ctx).Debug("getIdentityWorkspaceDetailsForPipeline", "openapi.Workspace")
+		plugin.Logger(ctx).Debug("getIdentityWorkspaceDetailsForWorkspaceProcess", "openapi.Workspace")
 		identityId := h.ParentItem.(openapi.Workspace).IdentityId
 		identityWorkspaceDetails.WorkspaceHandle = h.ParentItem.(openapi.Workspace).Handle
 		getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 			if strings.HasPrefix(identityId, "u_") {
 				resp, _, err := svc.Users.Get(ctx, identityId).Execute()
-				identityWorkspaceDetails.IdentityId = resp.Id
 				identityWorkspaceDetails.IdentityType = "user"
 				identityWorkspaceDetails.IdentityHandle = resp.Handle
 				return nil, err
 			} else {
 				resp, _, err := svc.Orgs.Get(ctx, identityId).Execute()
-				identityWorkspaceDetails.IdentityId = resp.Id
 				identityWorkspaceDetails.IdentityType = "org"
 				identityWorkspaceDetails.IdentityHandle = resp.Handle
 				return nil, err
@@ -455,29 +437,27 @@ func getIdentityWorkspaceDetailsForPipeline(ctx context.Context, d *plugin.Query
 		_, _ = plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 		return identityWorkspaceDetails, nil
 	case *openapi.Workspace:
-		plugin.Logger(ctx).Debug("getIdentityWorkspaceDetailsForPipeline", "*openapi.Workspace")
+		plugin.Logger(ctx).Debug("getIdentityWorkspaceDetailsForWorkspaceProcess", "*openapi.Workspace")
 		identityId := h.ParentItem.(*openapi.Workspace).IdentityId
 		identityWorkspaceDetails.WorkspaceHandle = h.ParentItem.(*openapi.Workspace).Handle
 		getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 			if strings.HasPrefix(identityId, "u_") {
 				resp, _, err := svc.Users.Get(ctx, identityId).Execute()
-				identityWorkspaceDetails.IdentityId = resp.Id
 				identityWorkspaceDetails.IdentityType = "user"
 				identityWorkspaceDetails.IdentityHandle = resp.Handle
 				return nil, err
 			} else {
 				resp, _, err := svc.Orgs.Get(ctx, identityId).Execute()
-				identityWorkspaceDetails.IdentityId = resp.Id
 				identityWorkspaceDetails.IdentityType = "org"
 				identityWorkspaceDetails.IdentityHandle = resp.Handle
 				return nil, err
 			}
 		}
 		_, _ = plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
-		plugin.Logger(ctx).Debug("getIdentityWorkspaceDetailsForPipeline", "identityWorkspaceDetails", identityWorkspaceDetails)
+		plugin.Logger(ctx).Debug("getIdentityWorkspaceDetailsForWorkspaceProcess", "identityWorkspaceDetails", identityWorkspaceDetails)
 		return &identityWorkspaceDetails, nil
 	default:
-		plugin.Logger(ctx).Debug("getIdentityWorkspaceDetailsForPipeline", "Unknown Type", w)
+		plugin.Logger(ctx).Debug("getIdentityWorkspaceDetailsForWorkspaceProcess", "Unknown Type", w)
 	}
 	return &identityWorkspaceDetails, nil
 }
