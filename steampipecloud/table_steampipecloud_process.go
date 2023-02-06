@@ -51,6 +51,7 @@ func tableSteampipeCloudProcess(_ context.Context) *plugin.Table {
 				Name:        "identity_id",
 				Description: "The unique identifier of the identity to which the process belongs to.",
 				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "identity_handle",
