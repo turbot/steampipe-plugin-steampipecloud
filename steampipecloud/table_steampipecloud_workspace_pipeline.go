@@ -25,7 +25,7 @@ type IdentityWorkspaceDetailsForPipeline struct {
 func tableSteampipeCloudWorkspacePipeline(_ context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "steampipecloud_workspace_pipeline",
-		Description: "Pipelines allow users to run different kinds of activities in steampipe cloud on a schedule.",
+		Description: "Pipelines allow users to run different kinds of activities in Steampipe Cloud on a schedule.",
 		List: &plugin.ListConfig{
 			ParentHydrate: listWorkspaces,
 			Hydrate:       listWorkspacePipelines,
