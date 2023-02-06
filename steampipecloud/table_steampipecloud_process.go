@@ -22,7 +22,7 @@ type IdentityDetailsForProcess struct {
 func tableSteampipeCloudProcess(_ context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "steampipecloud_process",
-		Description: "Processes allow to track various activities in steampipe cloud.",
+		Description: "Allows to track various processes for an identity in Steampipe Cloud.",
 		List: &plugin.ListConfig{
 			Hydrate: listIdentityProcesses,
 			KeyColumns: []*plugin.KeyColumn{

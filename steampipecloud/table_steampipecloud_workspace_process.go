@@ -23,7 +23,7 @@ type IdentityWorkspaceDetailsForProcess struct {
 func tableSteampipeCloudWorkspaceProcess(_ context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "steampipecloud_workspace_process",
-		Description: "Processes allow to track various activities in steampipe cloud.",
+		Description: "Allows to track various processes for a workspace of an identity in Steampipe Cloud.",
 		List: &plugin.ListConfig{
 			ParentHydrate: listWorkspaces,
 			Hydrate:       listWorkspaceProcesses,
