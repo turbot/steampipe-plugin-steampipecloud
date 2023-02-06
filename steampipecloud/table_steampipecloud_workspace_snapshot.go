@@ -354,6 +354,53 @@ func listOrgWorkspaceSnapshots(ctx context.Context, d *plugin.QueryData, h *plug
 		return err
 	}
 
+	var filter string
+	// collect all clauses passed as quals except for "query_where"
+	var clauses []string
+	for _, keyQual := range d.Table.List.KeyColumns {
+		filterQual := d.Quals[keyQual.Name]
+		if filterQual == nil || keyQual.Name == "query_where" {
+			continue
+		}
+		for _, qual := range filterQual.Quals {
+			if qual.Value != nil {
+				var value string
+				if keyQual.Name == "created_at" {
+					t := time.Unix(qual.Value.GetTimestampValue().Seconds, int64(qual.Value.GetTimestampValue().Nanos)).UTC()
+					value = t.Format("2006-01-02 15:04:05.00000")
+				} else {
+					value = qual.Value.GetStringValue()
+				}
+				switch qual.Operator {
+				case "=":
+					clauses = append(clauses, fmt.Sprintf(`%s = '%s'`, keyQual.Name, value))
+				case "<>":
+					clauses = append(clauses, fmt.Sprintf(`%s <> '%s'`, keyQual.Name, value))
+				case ">":
+					clauses = append(clauses, fmt.Sprintf(`%s > '%s'`, keyQual.Name, value))
+				case ">=":
+					clauses = append(clauses, fmt.Sprintf(`%s >= '%s'`, keyQual.Name, value))
+				case "<":
+					clauses = append(clauses, fmt.Sprintf(`%s < '%s'`, keyQual.Name, value))
+				case "<=":
+					clauses = append(clauses, fmt.Sprintf(`%s <= '%s'`, keyQual.Name, value))
+				}
+			}
+		}
+	}
+
+	// Frame the filter string by joining the collected quals by "and"
+	filter = strings.Join(clauses, " and ")
+
+	// Check if a query_where qual has been passed and add it to the filter string if yes
+	if d.KeyColumnQuals["query_where"] != nil {
+		if len(filter) >= 1 {
+			filter = filter + " and " + d.KeyColumnQuals["query_where"].GetStringValue()
+		} else {
+			filter = d.KeyColumnQuals["query_where"].GetStringValue()
+		}
+	}
+
 	pagesLeft := true
 	var resp openapi.ListWorkspaceSnapshotsResponse
 	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
@@ -361,12 +408,12 @@ func listOrgWorkspaceSnapshots(ctx context.Context, d *plugin.QueryData, h *plug
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgWorkspaceSnapshots.List(ctx, orgHandle, workspaceHandle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
+				resp, _, err = svc.OrgWorkspaceSnapshots.List(ctx, orgHandle, workspaceHandle).Where(filter).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgWorkspaceSnapshots.List(ctx, orgHandle, workspaceHandle).Limit(maxResults).Execute()
+				resp, _, err = svc.OrgWorkspaceSnapshots.List(ctx, orgHandle, workspaceHandle).Where(filter).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
