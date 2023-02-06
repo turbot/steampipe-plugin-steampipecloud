@@ -13,7 +13,7 @@ Optional quals are supported for the following columns:
 - `identity_handle`
 - `identity_id`
 - `pipeline`
-- `query_where` - Allows use of [query filters](https://steampipe.io/docs/cloud/reference/query-filter). Please note that any query filter passed into the `query_where` qual will be combined with other optional quals.
+- `query_where` - Allows use of [query filters](https://steampipe.io/docs/cloud/reference/query-filter). For a list of supported columns for pipelines, please see [Supported APIs and Columns](https://steampipe.io/docs/cloud/reference/query-filter#supported-apis--columns). Please note that any query filter passed into the `query_where` qual will be combined with other optional quals.
 - `title`
 - `updated_at`
 - `workspace_handle`
