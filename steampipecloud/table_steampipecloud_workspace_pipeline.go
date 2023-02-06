@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	openapi "github.com/turbot/steampipe-cloud-sdk-go"
 
@@ -30,12 +31,42 @@ func tableSteampipeCloudWorkspacePipeline(_ context.Context) *plugin.Table {
 			Hydrate:       listWorkspacePipelines,
 			KeyColumns: []*plugin.KeyColumn{
 				{
+					Name:      "created_at",
+					Require:   plugin.Optional,
+					Operators: []string{">", ">=", "=", "<", "<="},
+				},
+				{
+					Name:      "id",
+					Require:   plugin.Optional,
+					Operators: []string{"=", "<>"},
+				},
+				{
 					Name:    "identity_handle",
 					Require: plugin.Optional,
 				},
 				{
 					Name:    "identity_id",
 					Require: plugin.Optional,
+				},
+				{
+					Name:      "pipeline",
+					Require:   plugin.Optional,
+					Operators: []string{"=", "<>"},
+				},
+				{
+					Name:       "query_where",
+					Require:    plugin.Optional,
+					CacheMatch: "exact",
+				},
+				{
+					Name:      "title",
+					Require:   plugin.Optional,
+					Operators: []string{"=", "<>"},
+				},
+				{
+					Name:      "updated_at",
+					Require:   plugin.Optional,
+					Operators: []string{">", ">=", "=", "<", "<="},
 				},
 				{
 					Name:    "workspace_handle",
@@ -123,6 +154,12 @@ func tableSteampipeCloudWorkspacePipeline(_ context.Context) *plugin.Table {
 				Name:        "last_process",
 				Description: "Information about the process that was last executed for the pipeline.",
 				Type:        proto.ColumnType_JSON,
+			},
+			{
+				Name:        "query_where",
+				Description: "The query where expression to filter pipelines.",
+				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromQual("query_where"),
 			},
 			{
 				Name:        "created_at",
@@ -240,6 +277,53 @@ func listUserWorkspacePipelines(ctx context.Context, d *plugin.QueryData, h *plu
 		return err
 	}
 
+	var filter string
+	// collect all clauses passed as quals except for "query_where", "identity_id", "identity_handle", "workspace_id", "workspace_handle"
+	var clauses []string
+	for _, keyQual := range d.Table.List.KeyColumns {
+		filterQual := d.Quals[keyQual.Name]
+		if filterQual == nil || keyQual.Name == "query_where" || keyQual.Name == "identity_id" || keyQual.Name == "identity_handle" || keyQual.Name == "workspace_id" || keyQual.Name == "workspace_handle" {
+			continue
+		}
+		for _, qual := range filterQual.Quals {
+			if qual.Value != nil {
+				var value string
+				if keyQual.Name == "created_at" || keyQual.Name == "updated_at" {
+					t := time.Unix(qual.Value.GetTimestampValue().Seconds, int64(qual.Value.GetTimestampValue().Nanos)).UTC()
+					value = t.Format("2006-01-02 15:04:05.00000")
+				} else {
+					value = qual.Value.GetStringValue()
+				}
+				switch qual.Operator {
+				case "=":
+					clauses = append(clauses, fmt.Sprintf(`%s = '%s'`, keyQual.Name, value))
+				case "<>":
+					clauses = append(clauses, fmt.Sprintf(`%s <> '%s'`, keyQual.Name, value))
+				case ">":
+					clauses = append(clauses, fmt.Sprintf(`%s > '%s'`, keyQual.Name, value))
+				case ">=":
+					clauses = append(clauses, fmt.Sprintf(`%s >= '%s'`, keyQual.Name, value))
+				case "<":
+					clauses = append(clauses, fmt.Sprintf(`%s < '%s'`, keyQual.Name, value))
+				case "<=":
+					clauses = append(clauses, fmt.Sprintf(`%s <= '%s'`, keyQual.Name, value))
+				}
+			}
+		}
+	}
+
+	// Frame the filter string by joining the collected quals by "and"
+	filter = strings.Join(clauses, " and ")
+
+	// Check if a query_where qual has been passed and add it to the filter string if yes
+	if d.KeyColumnQuals["query_where"] != nil {
+		if len(filter) >= 1 {
+			filter = filter + " and " + d.KeyColumnQuals["query_where"].GetStringValue()
+		} else {
+			filter = d.KeyColumnQuals["query_where"].GetStringValue()
+		}
+	}
+
 	pagesLeft := true
 	var resp openapi.ListPipelinesResponse
 	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
@@ -247,12 +331,12 @@ func listUserWorkspacePipelines(ctx context.Context, d *plugin.QueryData, h *plu
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserWorkspacePipelines.List(ctx, userHandle, workspaceHandle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
+				resp, _, err = svc.UserWorkspacePipelines.List(ctx, userHandle, workspaceHandle).Where(filter).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.UserWorkspacePipelines.List(ctx, userHandle, workspaceHandle).Limit(maxResults).Execute()
+				resp, _, err = svc.UserWorkspacePipelines.List(ctx, userHandle, workspaceHandle).Where(filter).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
@@ -294,6 +378,53 @@ func listOrgWorkspacePipelines(ctx context.Context, d *plugin.QueryData, h *plug
 		return err
 	}
 
+	var filter string
+	// collect all clauses passed as quals except for "query_where", "identity_id", "identity_handle", "workspace_id", "workspace_handle"
+	var clauses []string
+	for _, keyQual := range d.Table.List.KeyColumns {
+		filterQual := d.Quals[keyQual.Name]
+		if filterQual == nil || keyQual.Name == "query_where" || keyQual.Name == "identity_id" || keyQual.Name == "identity_handle" || keyQual.Name == "workspace_id" || keyQual.Name == "workspace_handle" {
+			continue
+		}
+		for _, qual := range filterQual.Quals {
+			if qual.Value != nil {
+				var value string
+				if keyQual.Name == "created_at" || keyQual.Name == "updated_at" {
+					t := time.Unix(qual.Value.GetTimestampValue().Seconds, int64(qual.Value.GetTimestampValue().Nanos)).UTC()
+					value = t.Format("2006-01-02 15:04:05.00000")
+				} else {
+					value = qual.Value.GetStringValue()
+				}
+				switch qual.Operator {
+				case "=":
+					clauses = append(clauses, fmt.Sprintf(`%s = '%s'`, keyQual.Name, value))
+				case "<>":
+					clauses = append(clauses, fmt.Sprintf(`%s <> '%s'`, keyQual.Name, value))
+				case ">":
+					clauses = append(clauses, fmt.Sprintf(`%s > '%s'`, keyQual.Name, value))
+				case ">=":
+					clauses = append(clauses, fmt.Sprintf(`%s >= '%s'`, keyQual.Name, value))
+				case "<":
+					clauses = append(clauses, fmt.Sprintf(`%s < '%s'`, keyQual.Name, value))
+				case "<=":
+					clauses = append(clauses, fmt.Sprintf(`%s <= '%s'`, keyQual.Name, value))
+				}
+			}
+		}
+	}
+
+	// Frame the filter string by joining the collected quals by "and"
+	filter = strings.Join(clauses, " and ")
+
+	// Check if a query_where qual has been passed and add it to the filter string if yes
+	if d.KeyColumnQuals["query_where"] != nil {
+		if len(filter) >= 1 {
+			filter = filter + " and " + d.KeyColumnQuals["query_where"].GetStringValue()
+		} else {
+			filter = d.KeyColumnQuals["query_where"].GetStringValue()
+		}
+	}
+
 	pagesLeft := true
 	var resp openapi.ListPipelinesResponse
 	var listDetails func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error)
@@ -301,12 +432,12 @@ func listOrgWorkspacePipelines(ctx context.Context, d *plugin.QueryData, h *plug
 	for pagesLeft {
 		if resp.NextToken != nil {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgWorkspacePipelines.List(ctx, orgHandle, workspaceHandle).NextToken(*resp.NextToken).Limit(maxResults).Execute()
+				resp, _, err = svc.OrgWorkspacePipelines.List(ctx, orgHandle, workspaceHandle).Where(filter).NextToken(*resp.NextToken).Limit(maxResults).Execute()
 				return resp, err
 			}
 		} else {
 			listDetails = func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-				resp, _, err = svc.OrgWorkspacePipelines.List(ctx, orgHandle, workspaceHandle).Limit(maxResults).Execute()
+				resp, _, err = svc.OrgWorkspacePipelines.List(ctx, orgHandle, workspaceHandle).Where(filter).Limit(maxResults).Execute()
 				return resp, err
 			}
 		}
