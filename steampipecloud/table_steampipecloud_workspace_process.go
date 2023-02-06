@@ -104,11 +104,6 @@ func tableSteampipeCloudWorkspaceProcess(_ context.Context) *plugin.Table {
 				Type:        proto.ColumnType_STRING,
 			},
 			{
-				Name:        "data_state",
-				Description: "The current state of the process and its log data.",
-				Type:        proto.ColumnType_STRING,
-			},
-			{
 				Name:        "created_at",
 				Description: "The time when the process was created.",
 				Type:        proto.ColumnType_TIMESTAMP,
