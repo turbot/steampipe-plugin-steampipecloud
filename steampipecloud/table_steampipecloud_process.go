@@ -324,7 +324,7 @@ func getUserProcess(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateD
 	// Create Session
 	svc, err := connect(ctx, d)
 	if err != nil {
-		plugin.Logger(ctx).Error("getUserProcess", "connection_error", err)
+		plugin.Logger(ctx).Error("steampipecloud_process.getUserProcess", "connection_error", err)
 		return nil, err
 	}
 
