@@ -262,7 +262,7 @@ func listOrgProcesses(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
 		response, err := plugin.RetryHydrate(ctx, d, h, listDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
 		if err != nil {
-			plugin.Logger(ctx).Error("listOrgProcesses", "list", err)
+			plugin.Logger(ctx).Error("steampipecloud_process.listOrgProcesses", "query_error", err)
 			return err
 		}
 
