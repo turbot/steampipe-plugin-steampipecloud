@@ -394,7 +394,7 @@ func getIdentityDetailsForProcess(ctx context.Context, d *plugin.QueryData, h *p
 	} else {
 		org, _, err := svc.Orgs.Get(ctx, *process.IdentityId).Execute()
 		if err != nil {
-			plugin.Logger(ctx).Error("getIdentityDetailsForProcess", "getOrg", err)
+			plugin.Logger(ctx).Error("steampipecloud_process.getIdentityDetailsForProcess", "query_error", err)
 			return nil, err
 		}
 		identityDetails.IdentityHandle = org.Handle
