@@ -29,7 +29,7 @@ func tableSteampipeCloudWorkspacePipeline(_ context.Context) *plugin.Table {
 		List: &plugin.ListConfig{
 			ParentHydrate: listWorkspaces,
 			Hydrate:       listWorkspacePipelines,
-			KeyColumns: []*plugin.KeyColumn{
+			KeyColumns:    []*plugin.KeyColumn{
 				{
 					Name:      "created_at",
 					Require:   plugin.Optional,
