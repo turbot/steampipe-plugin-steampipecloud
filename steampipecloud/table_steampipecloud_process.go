@@ -239,7 +239,7 @@ func listOrgProcesses(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
 	// Create Session
 	svc, err := connect(ctx, d)
 	if err != nil {
-		plugin.Logger(ctx).Error("listOrgProcesses", "connection_error", err)
+		plugin.Logger(ctx).Error("steampipecloud_process.listOrgProcesses", "connection_error", err)
 		return err
 	}
 
