@@ -313,7 +313,7 @@ func getIdentityProcess(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 	}
 
 	if err != nil {
-		plugin.Logger(ctx).Error("getIdentityProcess", "error", err)
+		plugin.Logger(ctx).Error("steampipecloud_process.getIdentityProcess", "query_error", err)
 		return nil, err
 	}
 
