@@ -148,7 +148,7 @@ func listIdentityProcesses(ctx context.Context, d *plugin.QueryData, h *plugin.H
 	getUserIdentityCached := plugin.HydrateFunc(getUserIdentity).WithCache()
 	commonData, err := getUserIdentityCached(ctx, d, h)
 	if err != nil {
-		plugin.Logger(ctx).Error("listIdentityProcesses", "getUserIdentityCached", err)
+		plugin.Logger(ctx).Error("steampipecloud_process.listIdentityProcesses", "getUserIdentityCached", err)
 		return nil, err
 	}
 
