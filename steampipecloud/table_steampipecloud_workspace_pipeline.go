@@ -374,7 +374,7 @@ func listOrgWorkspacePipelines(ctx context.Context, d *plugin.QueryData, h *plug
 	// Create Session
 	svc, err := connect(ctx, d)
 	if err != nil {
-		plugin.Logger(ctx).Error("listOrgWorkspacePipelines", "connection_error", err)
+		plugin.Logger(ctx).Error("steampipecloud_workspace_pipeline.listOrgWorkspacePipelines", "connection_error", err)
 		return err
 	}
 
