@@ -174,7 +174,7 @@ func listIdentityProcesses(ctx context.Context, d *plugin.QueryData, h *plugin.H
 	}
 
 	if err != nil {
-		plugin.Logger(ctx).Error("listIdentityProcesses", "error", err)
+		plugin.Logger(ctx).Error("steampipecloud_process.listIdentityProcesses", "query_error", err)
 		return nil, err
 	}
 
