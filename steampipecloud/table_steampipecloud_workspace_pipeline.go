@@ -262,7 +262,7 @@ func listWorkspacePipelines(ctx context.Context, d *plugin.QueryData, h *plugin.
 	}
 
 	if err != nil {
-		plugin.Logger(ctx).Error("listWorkspacePipelines", "error", err)
+		plugin.Logger(ctx).Error("steampipecloud_workspace_pipeline.listWorkspacePipelines", "query_error", err)
 		return nil, err
 	}
 
