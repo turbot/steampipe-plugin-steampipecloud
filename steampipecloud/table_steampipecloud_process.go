@@ -185,7 +185,7 @@ func listUserProcesses(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 	// Create Session
 	svc, err := connect(ctx, d)
 	if err != nil {
-		plugin.Logger(ctx).Error("listUserProcesses", "connection_error", err)
+		plugin.Logger(ctx).Error("steampipecloud_process.listUserProcesses", "connection_error", err)
 		return err
 	}
 
