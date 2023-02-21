@@ -156,7 +156,6 @@ func listIdentityProcesses(ctx context.Context, d *plugin.QueryData, h *plugin.H
 
 	// Error out if both identity_handle and identity_id is passed
 	if identityHandle != "" && identityId != "" {
-		plugin.Logger(ctx).Error("listIdentityProcesses", "please pass any one of identity_handle or identity_id")
 		return nil, fmt.Errorf("please pass any one of identity_handle or identity_id")
 	}
 	if identityHandle != "" {

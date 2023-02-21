@@ -237,7 +237,6 @@ func listWorkspacePipelines(ctx context.Context, d *plugin.QueryData, h *plugin.
 
 	// Error out if both workspace_handle and workspace_id is passed
 	if workspaceHandle != "" && workspaceId != "" {
-		plugin.Logger(ctx).Error("listWorkspacePipelines", "please pass any one of workspace_id or workspace_handle")
 		return nil, fmt.Errorf("please pass any one of workspace_id or workspace_handle")
 	}
 	// If either one has been passed, check whether either of the handle or the id matches with the workspace in context
