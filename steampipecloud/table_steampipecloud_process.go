@@ -154,7 +154,7 @@ func listIdentityProcesses(ctx context.Context, d *plugin.QueryData, h *plugin.H
 
 	user = commonData.(openapi.User)
 
-	// Error out if both workspace_handle and workspace_id is passed
+	// Error out if both identity_handle and identity_id is passed
 	if identityHandle != "" && identityId != "" {
 		plugin.Logger(ctx).Error("listIdentityProcesses", "please pass any one of identity_handle or identity_id")
 		return nil, fmt.Errorf("please pass any one of identity_handle or identity_id")
