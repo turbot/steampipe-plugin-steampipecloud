@@ -379,7 +379,7 @@ func getIdentityDetailsForProcess(ctx context.Context, d *plugin.QueryData, h *p
 	getUserIdentityCached := plugin.HydrateFunc(getUserIdentity).WithCache()
 	commonData, err := getUserIdentityCached(ctx, d, h)
 	if err != nil {
-		plugin.Logger(ctx).Error("getIdentityDetailsForProcess", "getUserIdentityCached", err)
+		plugin.Logger(ctx).Error("steampipecloud_process.getIdentityDetailsForProcess", "getUserIdentityCached", err)
 		return nil, err
 	}
 
