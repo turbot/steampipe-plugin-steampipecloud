@@ -372,7 +372,7 @@ func getIdentityDetailsForProcess(ctx context.Context, d *plugin.QueryData, h *p
 	// Create Session
 	svc, err := connect(ctx, d)
 	if err != nil {
-		plugin.Logger(ctx).Error("getIdentityDetailsForProcess", "connection_error", err)
+		plugin.Logger(ctx).Error("steampipecloud_process.getIdentityDetailsForProcess", "connection_error", err)
 		return nil, err
 	}
 
