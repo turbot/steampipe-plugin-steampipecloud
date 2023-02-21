@@ -344,7 +344,7 @@ func listUserWorkspacePipelines(ctx context.Context, d *plugin.QueryData, h *plu
 		response, err := plugin.RetryHydrate(ctx, d, h, listDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 
 		if err != nil {
-			plugin.Logger(ctx).Error("listUserWorkspacePipelines", "list", err)
+			plugin.Logger(ctx).Error("steampipecloud_workspace_pipeline.listUserWorkspacePipelines", "query_error", err)
 			return err
 		}
 
