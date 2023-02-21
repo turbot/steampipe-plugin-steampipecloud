@@ -348,7 +348,7 @@ func getOrgProcess(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDa
 	// Create Session
 	svc, err := connect(ctx, d)
 	if err != nil {
-		plugin.Logger(ctx).Error("getOrgProcess", "connection_error", err)
+		plugin.Logger(ctx).Error("steampipecloud_process.getOrgProcess", "connection_error", err)
 		return nil, err
 	}
 
