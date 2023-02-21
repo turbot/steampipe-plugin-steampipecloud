@@ -361,7 +361,7 @@ func getOrgProcess(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateDa
 
 	response, err := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 	if err != nil {
-		plugin.Logger(ctx).Error("getOrgProcess", "get", err)
+		plugin.Logger(ctx).Error("steampipecloud_process.getOrgProcess", "query_error", err)
 		return nil, err
 	}
 
