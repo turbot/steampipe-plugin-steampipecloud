@@ -1,3 +1,12 @@
+## v0.8.0 [2023-02-22]
+
+_What's new?_
+
+- New tables added
+  - [steampipecloud_process](https://hub.steampipe.io/plugins/turbot/steampipecloud/tables/steampipecloud_process) ([#31](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/31))
+  - [steampipecloud_workspace_pipeline](https://hub.steampipe.io/plugins/turbot/steampipecloud/tables/steampipecloud_workspace_pipeline) ([#31](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/31))
+  - [steampipecloud_workspace_process](https://hub.steampipe.io/plugins/turbot/steampipecloud/tables/steampipecloud_workspace_process) ([#31](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/31))
+
 ## v0.7.0 [2022-12-27]
 
 _Enhancements_
