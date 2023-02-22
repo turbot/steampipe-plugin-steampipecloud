@@ -29,7 +29,7 @@ func tableSteampipeCloudWorkspacePipeline(_ context.Context) *plugin.Table {
 		List: &plugin.ListConfig{
 			ParentHydrate: listWorkspaces,
 			Hydrate:       listWorkspacePipelines,
-			KeyColumns:    []*plugin.KeyColumn{
+			KeyColumns: []*plugin.KeyColumn{
 				{
 					Name:      "created_at",
 					Require:   plugin.Optional,
@@ -221,13 +221,9 @@ func listWorkspacePipelines(ctx context.Context, d *plugin.QueryData, h *plugin.
 	// set the limit to that instead
 	maxResults := int32(100)
 	limit := d.QueryContext.Limit
-	if d.QueryContext.Limit != nil {
+	if limit != nil {
 		if *limit < int64(maxResults) {
-			if *limit < 1 {
-				maxResults = int32(1)
-			} else {
-				maxResults = int32(*limit)
-			}
+			maxResults = int32(*limit)
 		}
 	}
 

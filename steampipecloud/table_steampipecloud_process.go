@@ -131,13 +131,9 @@ func listIdentityProcesses(ctx context.Context, d *plugin.QueryData, h *plugin.H
 	// set the limit to that instead
 	maxResults := int32(100)
 	limit := d.QueryContext.Limit
-	if d.QueryContext.Limit != nil {
+	if limit != nil {
 		if *limit < int64(maxResults) {
-			if *limit < 1 {
-				maxResults = int32(1)
-			} else {
-				maxResults = int32(*limit)
-			}
+			maxResults = int32(*limit)
 		}
 	}
 
