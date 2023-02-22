@@ -12,9 +12,7 @@ Optional quals are supported for the following columns:
 - `dashboard_name`
 - `dashboard_title`
 - `id`
-- `inputs`
 - `query_where` - Allows use of [query filters](https://steampipe.io/docs/cloud/reference/query-filter). For a list of supported columns for snapshots, please see [Supported APIs and Columns](https://steampipe.io/docs/cloud/reference/query-filter#supported-apis--columns). Please note that any query filter passed into the `query_where` qual will be combined with other optional quals.
-- `tags`
 - `visibility`
 
 ## Examples

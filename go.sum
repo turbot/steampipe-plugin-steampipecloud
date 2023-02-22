@@ -418,8 +418,8 @@ github.com/tkrajina/go-reflector v0.5.4 h1:dS9aJEa/eYNQU/fwsb5CSiATOxcNyA/gG/A7a
 github.com/tkrajina/go-reflector v0.5.4/go.mod h1:9PyLgEOzc78ey/JmQQHbW8cQJ1oucLlNQsg8yFvkVk8=
 github.com/turbot/go-kit v0.4.0 h1:EdD7Bf2EGAjvHRGQxRiWpDawzZSk3T+eghqbj74qiSc=
 github.com/turbot/go-kit v0.4.0/go.mod h1:SBdPRngbEfYubiR81iAVtO43oPkg1+ASr+XxvgbH7/k=
-github.com/turbot/steampipe-cloud-sdk-go v0.3.0 h1:2x0VlzAYoRZBWfYxZ3Z0kkMmERtZF8alfY3uctqWhGA=
-github.com/turbot/steampipe-cloud-sdk-go v0.3.0/go.mod h1:8M2CspUHgCGqDCJV+FNn+boBPyLRHyzDinYnoZ/kZYw=
+github.com/turbot/steampipe-cloud-sdk-go v0.5.0 h1:sgMpUL/gLnT5/9v6LaUDITo40npvSn+RQD5maT03wRQ=
+github.com/turbot/steampipe-cloud-sdk-go v0.5.0/go.mod h1:8M2CspUHgCGqDCJV+FNn+boBPyLRHyzDinYnoZ/kZYw=
 github.com/turbot/steampipe-plugin-sdk/v4 v4.1.8 h1:4/fEpsrWNSKA/p2otsibzijBCf4f35Y8jIgUcJgd0Ng=
 github.com/turbot/steampipe-plugin-sdk/v4 v4.1.8/go.mod h1:t1uwq6KylUr2CzIinxeTafoktJvX8yWmhaoWCJJc4YI=
 github.com/vmihailenco/msgpack v3.3.3+incompatible/go.mod h1:fy3FlTQTDXWkZ7Bh6AcGMlsjHatGryHQYUTf1ShIgkk=
