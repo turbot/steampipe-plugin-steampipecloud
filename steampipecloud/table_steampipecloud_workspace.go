@@ -6,9 +6,9 @@ import (
 
 	openapi "github.com/turbot/steampipe-cloud-sdk-go"
 
-	"github.com/turbot/steampipe-plugin-sdk/v4/grpc/proto"
-	"github.com/turbot/steampipe-plugin-sdk/v4/plugin"
-	"github.com/turbot/steampipe-plugin-sdk/v4/plugin/transform"
+	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
+	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
 )
 
 type IdentityDetails struct {
@@ -163,8 +163,8 @@ func listWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateD
 
 	user := commonData.(openapi.User)
 
-	identityHandle := d.KeyColumnQuals["identity_handle"].GetStringValue()
-	identityId := d.KeyColumnQuals["identity_id"].GetStringValue()
+	identityHandle := d.EqualsQuals["identity_handle"].GetStringValue()
+	identityId := d.EqualsQuals["identity_id"].GetStringValue()
 
 	// If the requested number of items is less than the paging max limit
 	// set the limit to that instead
@@ -235,7 +235,7 @@ func listUserWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 				d.StreamListItem(ctx, workspace)
 
 				// Context can be cancelled due to manual cancellation or the limit has been hit
-				if d.QueryStatus.RowsRemaining(ctx) == 0 {
+				if d.RowsRemaining(ctx) == 0 {
 					return nil
 				}
 			}
@@ -286,7 +286,7 @@ func listOrgWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 				d.StreamListItem(ctx, workspace)
 
 				// Context can be cancelled due to manual cancellation or the limit has been hit
-				if d.QueryStatus.RowsRemaining(ctx) == 0 {
+				if d.RowsRemaining(ctx) == 0 {
 					return nil
 				}
 			}
@@ -337,7 +337,7 @@ func listActorWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.Hyd
 				d.StreamListItem(ctx, actorWorkspace.Workspace)
 
 				// Context can be cancelled due to manual cancellation or the limit has been hit
-				if d.QueryStatus.RowsRemaining(ctx) == 0 {
+				if d.RowsRemaining(ctx) == 0 {
 					return nil
 				}
 			}
@@ -355,8 +355,8 @@ func listActorWorkspaces(ctx context.Context, d *plugin.QueryData, h *plugin.Hyd
 //// HYDRATE FUNCTIONS
 
 func getWorkspace(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-	identityHandle := d.KeyColumnQuals["identity_handle"].GetStringValue()
-	handle := d.KeyColumnQuals["handle"].GetStringValue()
+	identityHandle := d.EqualsQuals["identity_handle"].GetStringValue()
+	handle := d.EqualsQuals["handle"].GetStringValue()
 
 	// check if handle or identityHandle is empty
 	if identityHandle == "" || handle == "" {

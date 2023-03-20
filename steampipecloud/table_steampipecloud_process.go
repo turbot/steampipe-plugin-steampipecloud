@@ -7,9 +7,9 @@ import (
 
 	openapi "github.com/turbot/steampipe-cloud-sdk-go"
 
-	"github.com/turbot/steampipe-plugin-sdk/v4/grpc/proto"
-	"github.com/turbot/steampipe-plugin-sdk/v4/plugin"
-	"github.com/turbot/steampipe-plugin-sdk/v4/plugin/transform"
+	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
+	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
 )
 
 type IdentityDetailsForProcess struct {
@@ -137,8 +137,8 @@ func listIdentityProcesses(ctx context.Context, d *plugin.QueryData, h *plugin.H
 		}
 	}
 
-	identityHandle := d.KeyColumnQuals["identity_handle"].GetStringValue()
-	identityId := d.KeyColumnQuals["identity_id"].GetStringValue()
+	identityHandle := d.EqualsQuals["identity_handle"].GetStringValue()
+	identityId := d.EqualsQuals["identity_id"].GetStringValue()
 	var identityToPass string
 
 	getUserIdentityCached := plugin.HydrateFunc(getUserIdentity).WithCache()
@@ -215,7 +215,7 @@ func listUserProcesses(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 				d.StreamListItem(ctx, process)
 
 				// Context can be cancelled due to manual cancellation or the limit has been hit
-				if d.QueryStatus.RowsRemaining(ctx) == 0 {
+				if d.RowsRemaining(ctx) == 0 {
 					return nil
 				}
 			}
@@ -269,7 +269,7 @@ func listOrgProcesses(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
 				d.StreamListItem(ctx, process)
 
 				// Context can be cancelled due to manual cancellation or the limit has been hit
-				if d.QueryStatus.RowsRemaining(ctx) == 0 {
+				if d.RowsRemaining(ctx) == 0 {
 					return nil
 				}
 			}
@@ -285,8 +285,8 @@ func listOrgProcesses(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
 }
 
 func getIdentityProcess(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-	identityHandle := d.KeyColumnQuals["identity_handle"].GetStringValue()
-	processId := d.KeyColumnQuals["id"].GetStringValue()
+	identityHandle := d.EqualsQuals["identity_handle"].GetStringValue()
+	processId := d.EqualsQuals["id"].GetStringValue()
 
 	// check if identityHandle or workspaceHandle or process id is empty
 	if identityHandle == "" || processId == "" {

@@ -5,9 +5,9 @@ import (
 
 	openapi "github.com/turbot/steampipe-cloud-sdk-go"
 
-	"github.com/turbot/steampipe-plugin-sdk/v4/grpc/proto"
-	"github.com/turbot/steampipe-plugin-sdk/v4/plugin"
-	"github.com/turbot/steampipe-plugin-sdk/v4/plugin/transform"
+	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
+	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
 )
 
 //// TABLE DEFINITION
@@ -128,8 +128,8 @@ func tableSteampipeCloudWorkspaceModVariable(_ context.Context) *plugin.Table {
 //// LIST FUNCTION
 
 func listWorkspaceModVariables(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-	workspaceId := d.KeyColumnQuals["workspace_id"].GetStringValue()
-	modId := d.KeyColumnQuals["mod_alias"].GetStringValue()
+	workspaceId := d.EqualsQuals["workspace_id"].GetStringValue()
+	modId := d.EqualsQuals["mod_alias"].GetStringValue()
 
 	// If key qual columns are not mentioned, exit
 	if workspaceId == "" || modId == "" {
@@ -220,7 +220,7 @@ func listUserWorkspaceModVariables(ctx context.Context, d *plugin.QueryData, h *
 				d.StreamListItem(ctx, workspaceMod)
 
 				// Context can be cancelled due to manual cancellation or the limit has been hit
-				if d.QueryStatus.RowsRemaining(ctx) == 0 {
+				if d.RowsRemaining(ctx) == 0 {
 					return nil
 				}
 			}
@@ -270,7 +270,7 @@ func listOrgWorkspaceModVariables(ctx context.Context, d *plugin.QueryData, h *p
 				d.StreamListItem(ctx, workspaceMod)
 
 				// Context can be cancelled due to manual cancellation or the limit has been hit
-				if d.QueryStatus.RowsRemaining(ctx) == 0 {
+				if d.RowsRemaining(ctx) == 0 {
 					return nil
 				}
 			}

@@ -6,9 +6,9 @@ import (
 
 	openapi "github.com/turbot/steampipe-cloud-sdk-go"
 
-	"github.com/turbot/steampipe-plugin-sdk/v4/grpc/proto"
-	"github.com/turbot/steampipe-plugin-sdk/v4/plugin"
-	"github.com/turbot/steampipe-plugin-sdk/v4/plugin/transform"
+	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
+	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
 )
 
 type IdentityWorkspaceDetailsForWorkspaceMod struct {
@@ -226,7 +226,7 @@ func listUserWorkspaceMods(ctx context.Context, d *plugin.QueryData, h *plugin.H
 				d.StreamListItem(ctx, workspaceMod)
 
 				// Context can be cancelled due to manual cancellation or the limit has been hit
-				if d.QueryStatus.RowsRemaining(ctx) == 0 {
+				if d.RowsRemaining(ctx) == 0 {
 					return nil
 				}
 			}
@@ -276,7 +276,7 @@ func listOrgWorkspaceMods(ctx context.Context, d *plugin.QueryData, h *plugin.Hy
 				d.StreamListItem(ctx, workspaceMod)
 
 				// Context can be cancelled due to manual cancellation or the limit has been hit
-				if d.QueryStatus.RowsRemaining(ctx) == 0 {
+				if d.RowsRemaining(ctx) == 0 {
 					return nil
 				}
 			}
@@ -294,9 +294,9 @@ func listOrgWorkspaceMods(ctx context.Context, d *plugin.QueryData, h *plugin.Hy
 //// GET FUNCTION
 
 func getWorkspaceMod(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-	identityId := d.KeyColumnQuals["identity_id"].GetStringValue()
-	workspaceId := d.KeyColumnQuals["workspace_id"].GetStringValue()
-	alias := d.KeyColumnQuals["alias"].GetStringValue()
+	identityId := d.EqualsQuals["identity_id"].GetStringValue()
+	workspaceId := d.EqualsQuals["workspace_id"].GetStringValue()
+	alias := d.EqualsQuals["alias"].GetStringValue()
 
 	// check if identity or workspace or alias information is missing
 	if identityId == "" || workspaceId == "" || alias == "" {

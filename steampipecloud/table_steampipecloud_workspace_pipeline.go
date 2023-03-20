@@ -8,9 +8,9 @@ import (
 
 	openapi "github.com/turbot/steampipe-cloud-sdk-go"
 
-	"github.com/turbot/steampipe-plugin-sdk/v4/grpc/proto"
-	"github.com/turbot/steampipe-plugin-sdk/v4/plugin"
-	"github.com/turbot/steampipe-plugin-sdk/v4/plugin/transform"
+	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
+	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
 )
 
 type IdentityWorkspaceDetailsForPipeline struct {
@@ -227,8 +227,8 @@ func listWorkspacePipelines(ctx context.Context, d *plugin.QueryData, h *plugin.
 		}
 	}
 
-	workspaceHandle := d.KeyColumnQuals["workspace_handle"].GetStringValue()
-	workspaceId := d.KeyColumnQuals["workspace_id"].GetStringValue()
+	workspaceHandle := d.EqualsQuals["workspace_handle"].GetStringValue()
+	workspaceId := d.EqualsQuals["workspace_id"].GetStringValue()
 	var workspaceToPass string
 
 	// Error out if both workspace_handle and workspace_id is passed
@@ -311,11 +311,11 @@ func listUserWorkspacePipelines(ctx context.Context, d *plugin.QueryData, h *plu
 	filter = strings.Join(clauses, " and ")
 
 	// Check if a query_where qual has been passed and add it to the filter string if yes
-	if d.KeyColumnQuals["query_where"] != nil {
+	if d.EqualsQuals["query_where"] != nil {
 		if len(filter) >= 1 {
-			filter = filter + " and " + d.KeyColumnQuals["query_where"].GetStringValue()
+			filter = filter + " and " + d.EqualsQuals["query_where"].GetStringValue()
 		} else {
-			filter = d.KeyColumnQuals["query_where"].GetStringValue()
+			filter = d.EqualsQuals["query_where"].GetStringValue()
 		}
 	}
 
@@ -350,7 +350,7 @@ func listUserWorkspacePipelines(ctx context.Context, d *plugin.QueryData, h *plu
 				d.StreamListItem(ctx, pipeline)
 
 				// Context can be cancelled due to manual cancellation or the limit has been hit
-				if d.QueryStatus.RowsRemaining(ctx) == 0 {
+				if d.RowsRemaining(ctx) == 0 {
 					return nil
 				}
 			}
@@ -412,11 +412,11 @@ func listOrgWorkspacePipelines(ctx context.Context, d *plugin.QueryData, h *plug
 	filter = strings.Join(clauses, " and ")
 
 	// Check if a query_where qual has been passed and add it to the filter string if yes
-	if d.KeyColumnQuals["query_where"] != nil {
+	if d.EqualsQuals["query_where"] != nil {
 		if len(filter) >= 1 {
-			filter = filter + " and " + d.KeyColumnQuals["query_where"].GetStringValue()
+			filter = filter + " and " + d.EqualsQuals["query_where"].GetStringValue()
 		} else {
-			filter = d.KeyColumnQuals["query_where"].GetStringValue()
+			filter = d.EqualsQuals["query_where"].GetStringValue()
 		}
 	}
 
@@ -451,7 +451,7 @@ func listOrgWorkspacePipelines(ctx context.Context, d *plugin.QueryData, h *plug
 				d.StreamListItem(ctx, pipeline)
 
 				// Context can be cancelled due to manual cancellation or the limit has been hit
-				if d.QueryStatus.RowsRemaining(ctx) == 0 {
+				if d.RowsRemaining(ctx) == 0 {
 					return nil
 				}
 			}
@@ -467,9 +467,9 @@ func listOrgWorkspacePipelines(ctx context.Context, d *plugin.QueryData, h *plug
 }
 
 func getWorkspacePipeline(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-	identityHandle := d.KeyColumnQuals["identity_handle"].GetStringValue()
-	workspaceHandle := d.KeyColumnQuals["workspace_handle"].GetStringValue()
-	pipelineId := d.KeyColumnQuals["id"].GetStringValue()
+	identityHandle := d.EqualsQuals["identity_handle"].GetStringValue()
+	workspaceHandle := d.EqualsQuals["workspace_handle"].GetStringValue()
+	pipelineId := d.EqualsQuals["id"].GetStringValue()
 
 	// check if identityHandle or workspaceHandle or pipeline id is empty
 	if identityHandle == "" || workspaceHandle == "" || pipelineId == "" {
