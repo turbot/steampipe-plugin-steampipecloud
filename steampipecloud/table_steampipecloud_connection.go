@@ -6,9 +6,9 @@ import (
 
 	openapi "github.com/turbot/steampipe-cloud-sdk-go"
 
-	"github.com/turbot/steampipe-plugin-sdk/v4/grpc/proto"
-	"github.com/turbot/steampipe-plugin-sdk/v4/plugin"
-	"github.com/turbot/steampipe-plugin-sdk/v4/plugin/transform"
+	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
+	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
 )
 
 //// TABLE DEFINITION
@@ -140,8 +140,8 @@ func listConnections(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrate
 
 	user := commonData.(openapi.User)
 
-	identityHandle := d.KeyColumnQuals["identity_handle"].GetStringValue()
-	identityId := d.KeyColumnQuals["identity_id"].GetStringValue()
+	identityHandle := d.EqualsQuals["identity_handle"].GetStringValue()
+	identityId := d.EqualsQuals["identity_id"].GetStringValue()
 
 	// If the requested number of items is less than the paging max limit
 	// set the limit to that instead
@@ -210,7 +210,7 @@ func listOrgConnections(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 			d.StreamListItem(ctx, connection)
 
 			// Context can be cancelled due to manual cancellation or the limit has been hit
-			if d.QueryStatus.RowsRemaining(ctx) == 0 {
+			if d.RowsRemaining(ctx) == 0 {
 				return nil
 			}
 		}
@@ -258,7 +258,7 @@ func listUserConnections(ctx context.Context, d *plugin.QueryData, h *plugin.Hyd
 			d.StreamListItem(ctx, connection)
 
 			// Context can be cancelled due to manual cancellation or the limit has been hit
-			if d.QueryStatus.RowsRemaining(ctx) == 0 {
+			if d.RowsRemaining(ctx) == 0 {
 				return nil
 			}
 		}
@@ -308,7 +308,7 @@ func listActorConnections(ctx context.Context, d *plugin.QueryData, h *plugin.Hy
 				d.StreamListItem(ctx, connection)
 
 				// Context can be cancelled due to manual cancellation or the limit has been hit
-				if d.QueryStatus.RowsRemaining(ctx) == 0 {
+				if d.RowsRemaining(ctx) == 0 {
 					return nil
 				}
 			}
@@ -326,8 +326,8 @@ func listActorConnections(ctx context.Context, d *plugin.QueryData, h *plugin.Hy
 //// HYDRATE FUNCTIONS
 
 func getConnection(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-	identityHandle := d.KeyColumnQuals["identity_handle"].GetStringValue()
-	handle := d.KeyColumnQuals["handle"].GetStringValue()
+	identityHandle := d.EqualsQuals["identity_handle"].GetStringValue()
+	handle := d.EqualsQuals["handle"].GetStringValue()
 
 	// check if handle or identityHandle is empty
 	if identityHandle == "" || handle == "" {
