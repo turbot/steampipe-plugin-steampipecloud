@@ -3,7 +3,7 @@ module steampipe-plugin-steampipecloud
 go 1.19
 
 require (
-	github.com/turbot/steampipe-cloud-sdk-go v0.5.0
+	github.com/turbot/steampipe-cloud-sdk-go v0.6.0
 	github.com/turbot/steampipe-plugin-sdk/v5 v5.3.0
 )
 
