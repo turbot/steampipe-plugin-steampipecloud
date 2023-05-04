@@ -214,7 +214,7 @@ func listUserWorkspaceAggregators(ctx context.Context, d *plugin.QueryData, h *p
 	// Create Session
 	svc, err := connect(ctx, d)
 	if err != nil {
-		plugin.Logger(ctx).Error("listUserWorkspaceAggregators", "connection_error", err)
+		plugin.Logger(ctx).Error("steampipecloud_workspace_aggregator.listUserWorkspaceAggregators", "connection_error", err)
 		return err
 	}
 
