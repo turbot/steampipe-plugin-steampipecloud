@@ -408,7 +408,7 @@ func getIdentityWorkspaceDetailsForAggregator(ctx context.Context, d *plugin.Que
 	// Create Session
 	svc, err := connect(ctx, d)
 	if err != nil {
-		plugin.Logger(ctx).Error("getIdentityWorkspaceDetailsForAggregator", "connection_error", err)
+		plugin.Logger(ctx).Error("steampipecloud_workspace_aggregator.getIdentityWorkspaceDetailsForAggregator", "connection_error", err)
 		return nil, err
 	}
 
