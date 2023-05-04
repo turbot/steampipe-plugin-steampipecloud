@@ -373,7 +373,6 @@ func getUserWorkspaceAggregator(ctx context.Context, d *plugin.QueryData, h *plu
 	}
 
 	aggregator = response.(openapi.WorkspaceAggregator)
-	plugin.Logger(ctx).Info("getUserWorkspaceAggregator", "response", response)
 
 	return aggregator, nil
 }
