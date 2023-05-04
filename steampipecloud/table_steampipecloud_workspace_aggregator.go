@@ -160,7 +160,7 @@ func listWorkspaceAggregators(ctx context.Context, d *plugin.QueryData, h *plugi
 	case *openapi.Workspace:
 		workspace = h.Item.(*openapi.Workspace)
 	default:
-		plugin.Logger(ctx).Error("listWorkspaceAggregators", "unknown response type for workspace list parent hydrate call", w)
+		plugin.Logger(ctx).Error("steampipecloud_workspace_aggregator.listWorkspaceAggregators", "unknown response type for workspace list parent hydrate call", w)
 	}
 
 	// If the requested number of items is less than the paging max limit
