@@ -368,7 +368,7 @@ func getUserWorkspaceAggregator(ctx context.Context, d *plugin.QueryData, h *plu
 
 	response, err := plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
 	if err != nil {
-		plugin.Logger(ctx).Error("getUserWorkspaceAggregator", "get", err)
+		plugin.Logger(ctx).Error("steampipecloud_workspace_aggregator.getUserWorkspaceAggregator", "retry_error", err)
 		return nil, err
 	}
 
