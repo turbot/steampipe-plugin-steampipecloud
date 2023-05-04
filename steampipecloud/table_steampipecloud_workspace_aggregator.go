@@ -319,9 +319,9 @@ func listOrgWorkspaceAggregators(ctx context.Context, d *plugin.QueryData, h *pl
 }
 
 func getWorkspaceAggregator(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-	identityHandle := d.EqualsQuals["identity_handle"].GetStringValue()
-	workspaceHandle := d.EqualsQuals["workspace_handle"].GetStringValue()
-	aggregatorHandle := d.EqualsQuals["handle"].GetStringValue()
+	identityHandle := d.EqualsQualString("identity_handle")
+	workspaceHandle := d.EqualsQualString("workspace_handle")
+	aggregatorHandle := d.EqualsQualString("handle")
 
 	// check if identityHandle or workspaceHandle or aggregator id is empty
 	if identityHandle == "" || workspaceHandle == "" || aggregatorHandle == "" {
