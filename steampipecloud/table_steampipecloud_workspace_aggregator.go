@@ -173,8 +173,8 @@ func listWorkspaceAggregators(ctx context.Context, d *plugin.QueryData, h *plugi
 		}
 	}
 
-	workspaceHandle := d.EqualsQuals["workspace_handle"].GetStringValue()
-	workspaceId := d.EqualsQuals["workspace_id"].GetStringValue()
+	workspaceHandle := d.EqualsQualString("workspace_handle")
+	workspaceId := d.EqualsQualString("workspace_id")
 	var workspaceToPass string
 
 	// Error out if both workspace_handle and workspace_id is passed
