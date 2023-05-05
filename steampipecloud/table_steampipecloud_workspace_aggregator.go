@@ -458,8 +458,9 @@ func getIdentityWorkspaceDetailsForAggregator(ctx context.Context, d *plugin.Que
 		plugin.Logger(ctx).Debug("getIdentityWorkspaceDetailsForAggregator", "identityWorkspaceDetails", identityWorkspaceDetails)
 		return &identityWorkspaceDetails, nil
 	default:
+		// The default case will come up when the parent items does not exist which happens when a get call is executed instead of a list
+		// In a get call the parent hydrate is not executed and hence the parent item will not exist
 		plugin.Logger(ctx).Debug("getIdentityWorkspaceDetailsForAggregator", "Unknown Type", w)
-		// Since the parent id is of unknown type we can assume that its a get operation.
 		identityId := h.Item.(openapi.WorkspaceAggregator).IdentityId
 		workspaceId := h.Item.(openapi.WorkspaceAggregator).WorkspaceId
 		getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
