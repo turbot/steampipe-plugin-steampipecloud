@@ -24,9 +24,6 @@ func tableSteampipeCloudWorkspaceAggregator(_ context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "steampipecloud_workspace_aggregator",
 		Description: "Aggregators allow users to define a collection of connections in a workspace.",
-		DefaultIgnoreConfig: &plugin.IgnoreConfig{
-			ShouldIgnoreErrorFunc: shouldIgnoreErrors([]string{"404"}),
-		},
 		List: &plugin.ListConfig{
 			ParentHydrate: listWorkspaces,
 			Hydrate:       listWorkspaceAggregators,
