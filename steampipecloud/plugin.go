@@ -14,6 +14,9 @@ func Plugin(ctx context.Context) *plugin.Plugin {
 	p := &plugin.Plugin{
 		Name:             pluginName,
 		DefaultTransform: transform.FromGo(),
+		DefaultIgnoreConfig: &plugin.IgnoreConfig{
+			ShouldIgnoreErrorFunc: shouldIgnoreErrors([]string{"404"}),
+		},
 		ConnectionConfigSchema: &plugin.ConnectionConfigSchema{
 			NewInstance: ConfigInstance,
 			Schema:      ConfigSchema,
@@ -30,6 +33,7 @@ func Plugin(ctx context.Context) *plugin.Plugin {
 			"steampipecloud_user_email":                    tableSteampipeCloudUserEmail(ctx),
 			"steampipecloud_user_preferences":              tableSteampipeCloudUserPreferences(ctx),
 			"steampipecloud_workspace":                     tableSteampipeCloudWorkspace(ctx),
+			"steampipecloud_workspace_aggregator":          tableSteampipeCloudWorkspaceAggregator(ctx),
 			"steampipecloud_workspace_connection":          tableSteampipeCloudWorkspaceConnection(ctx),
 			"steampipecloud_workspace_mod":                 tableSteampipeCloudWorkspaceMod(ctx),
 			"steampipecloud_workspace_mod_variable":        tableSteampipeCloudWorkspaceModVariable(ctx),

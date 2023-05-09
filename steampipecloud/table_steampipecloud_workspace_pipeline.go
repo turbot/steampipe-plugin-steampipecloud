@@ -14,7 +14,6 @@ import (
 )
 
 type IdentityWorkspaceDetailsForPipeline struct {
-	IdentityId      string `json:"identity_id"`
 	IdentityHandle  string `json:"identity_handle"`
 	IdentityType    string `json:"identity_type"`
 	WorkspaceHandle string `json:"workspace_handle"`
@@ -93,7 +92,7 @@ func tableSteampipeCloudWorkspacePipeline(_ context.Context) *plugin.Table {
 				Name:        "identity_id",
 				Description: "The unique identifier of the identity to which the pipeline belongs to.",
 				Type:        proto.ColumnType_STRING,
-				Hydrate:     getIdentityWorkspaceDetailsForPipeline,
+				Transform:   transform.FromCamel(),
 			},
 			{
 				Name:        "identity_handle",
@@ -566,13 +565,11 @@ func getIdentityWorkspaceDetailsForPipeline(ctx context.Context, d *plugin.Query
 		getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 			if strings.HasPrefix(identityId, "u_") {
 				resp, _, err := svc.Users.Get(ctx, identityId).Execute()
-				identityWorkspaceDetails.IdentityId = resp.Id
 				identityWorkspaceDetails.IdentityType = "user"
 				identityWorkspaceDetails.IdentityHandle = resp.Handle
 				return nil, err
 			} else {
 				resp, _, err := svc.Orgs.Get(ctx, identityId).Execute()
-				identityWorkspaceDetails.IdentityId = resp.Id
 				identityWorkspaceDetails.IdentityType = "org"
 				identityWorkspaceDetails.IdentityHandle = resp.Handle
 				return nil, err
@@ -587,13 +584,11 @@ func getIdentityWorkspaceDetailsForPipeline(ctx context.Context, d *plugin.Query
 		getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 			if strings.HasPrefix(identityId, "u_") {
 				resp, _, err := svc.Users.Get(ctx, identityId).Execute()
-				identityWorkspaceDetails.IdentityId = resp.Id
 				identityWorkspaceDetails.IdentityType = "user"
 				identityWorkspaceDetails.IdentityHandle = resp.Handle
 				return nil, err
 			} else {
 				resp, _, err := svc.Orgs.Get(ctx, identityId).Execute()
-				identityWorkspaceDetails.IdentityId = resp.Id
 				identityWorkspaceDetails.IdentityType = "org"
 				identityWorkspaceDetails.IdentityHandle = resp.Handle
 				return nil, err
@@ -604,6 +599,39 @@ func getIdentityWorkspaceDetailsForPipeline(ctx context.Context, d *plugin.Query
 		return &identityWorkspaceDetails, nil
 	default:
 		plugin.Logger(ctx).Debug("getIdentityWorkspaceDetailsForPipeline", "Unknown Type", w)
+		// Since the parent id is of unknown type we can assume that its a get operation.
+		identityId := h.Item.(openapi.Pipeline).IdentityId
+		workspaceId := h.Item.(openapi.Pipeline).WorkspaceId
+		getDetails := func(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+			if strings.HasPrefix(identityId, "u_") {
+				user, _, err := svc.Users.Get(ctx, identityId).Execute()
+				if err != nil {
+					return nil, err
+				}
+				identityWorkspaceDetails.IdentityType = "user"
+				identityWorkspaceDetails.IdentityHandle = user.Handle
+				workspace, _, err := svc.UserWorkspaces.Get(ctx, identityId, *workspaceId).Execute()
+				if err != nil {
+					return nil, err
+				}
+				identityWorkspaceDetails.WorkspaceHandle = workspace.Handle
+			} else {
+				org, _, err := svc.Orgs.Get(ctx, identityId).Execute()
+				if err != nil {
+					return nil, err
+				}
+				identityWorkspaceDetails.IdentityType = "org"
+				identityWorkspaceDetails.IdentityHandle = org.Handle
+				workspace, _, err := svc.UserWorkspaces.Get(ctx, identityId, *workspaceId).Execute()
+				if err != nil {
+					return nil, err
+				}
+				identityWorkspaceDetails.WorkspaceHandle = workspace.Handle
+			}
+			return nil, nil
+		}
+		_, _ = plugin.RetryHydrate(ctx, d, h, getDetails, &plugin.RetryConfig{ShouldRetryError: shouldRetryError})
+		plugin.Logger(ctx).Debug("getIdentityWorkspaceDetailsForAggregator", "identityWorkspaceDetails", identityWorkspaceDetails)
+		return &identityWorkspaceDetails, err
 	}
-	return &identityWorkspaceDetails, nil
 }
