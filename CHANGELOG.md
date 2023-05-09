@@ -1,3 +1,10 @@
+## v0.10.0 [2023-05-09]
+
+_What's new?_
+
+- New tables added
+  - [steampipecloud_workspace_aggregator](https://hub.steampipe.io/plugins/turbot/steampipecloud/tables/steampipecloud_workspace_aggregator) ([#35](https://github.com/turbot/steampipe-plugin-steampipecloud/pull/35))
+
 ## v0.9.0 [2023-04-10]
 
 _Dependencies_
