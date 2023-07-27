@@ -1,8 +1,11 @@
+# :warning: DEPRECATED
+
+The Steampipe Cloud plugin has been deprecated as part of our [renaming](https://turbot.com/blog/2023/07/introducing-turbot-guardrails-and-pipes) of Steampipe Cloud to Turbot Pipes. Please use the [Turbot Pipes plugin](https://hub.steampipe.io/plugins/turbot/pipes) instead.
+
+---
 ![image](https://hub.steampipe.io/images/plugins/turbot/steampipecloud-social-graphic.png)
 
-# Steampipe Cloud Plugin for Steampipe [DEPRECATED]
-
-This plugin has been deprecated and replaced by [Turbot Pipes](https://hub.steampipe.io/plugins/turbot/pipes). This was part of our [renaming](https://turbot.com/blog/2023/07/introducing-turbot-guardrails-and-pipes) of Steampipe Cloud to Turbot Pipes.
+# Steampipe Cloud Plugin for Steampipe
 
 Use SQL to query workspaces, connections and more from Steampipe Cloud.
 
