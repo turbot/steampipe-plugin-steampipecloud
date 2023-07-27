@@ -14,6 +14,8 @@ og_image: "/images/plugins/turbot/steampipecloud-social-graphic.png"
 
 This plugin has been deprecated and replaced by [Turbot Pipes](https://hub.steampipe.io/plugins/turbot/pipes). This was part of our [renaming](https://turbot.com/blog/2023/07/introducing-turbot-guardrails-and-pipes) of Steampipe Cloud to Turbot Pipes.
 
+---
+
 [Steampipe Cloud](https://cloud.steampipe.io/) is a fully managed SaaS platform for hosting Steampipe instances.
 
 [Steampipe](https://steampipe.io) is an open source CLI to instantly query cloud APIs using SQL.
