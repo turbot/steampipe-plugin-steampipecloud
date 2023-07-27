@@ -1,3 +1,9 @@
+## v0.12.0 [2023-07-27]
+
+_Deprecated_
+
+- This plugin has been deprecated and replaced by [Turbot Pipes](https://hub.steampipe.io/plugins/turbot/pipes). This was part of our [renaming](https://turbot.com/blog/2023/07/introducing-turbot-guardrails-and-pipes) of Steampipe Cloud to Turbot Pipes.
+
 ## v0.11.0 [2023-06-20]
 
 _Dependencies_
