@@ -1,3 +1,9 @@
+## v0.12.1 [2023-07-27]
+
+_Deprecated_
+
+- Update the deprecation messages in `docs/index.md` and `README` files.
+
 ## v0.12.0 [2023-07-27]
 
 _Deprecated_
